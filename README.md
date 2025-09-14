@@ -14,4 +14,5 @@ Chip-8 — это простой интерпретируемый язык пр�
 Документация, которую я планирую использовать для создания Chip-8 эмулятора:
 1. Thomas P. Greene’s technical reference: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.1
 2. Awesome CHIP-8: https://chip-8.github.io/links/
-3. A collection of ROM images with tests that will aid you in developing your own CHIP-8, SUPER-CHIP or XO-CHIP interpreter (or "emulator"):                           https://github.com/Timendus/chip8-test-suite?tab=readme-ov-file#introduction
+3. A collection of ROM images with tests that will aid you in developing your own CHIP-8, SUPER-CHIP or XO-CHIP interpreter (or "emulator"): https://github.com/Timendus/chip8-test-suite?tab=readme-ov-file#introduction
+4. CHIP-8: https://en.m.wikipedia.org/wiki/CHIP-8#Virtual_machine_description
