@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 class Chip8 {
 private:
@@ -9,13 +10,13 @@ private:
 
 	unsigned char V[16];  // general purpose registers
 
-	unsigned short I;  // index register
-	unsigned short pc;  // program counter
+	unsigned short I = 0;  // index register
+	unsigned short pc = 0;  // program counter
 
 	unsigned char gfx[64 * 32];
 
-	unsigned char delay_timer;
-	unsigned char sound_timer;
+	unsigned char delay_timer = 60;
+	unsigned char sound_timer = 60;
 
 	unsigned short stack[16];
 	unsigned short sp;  // stack pointer
@@ -44,10 +45,11 @@ private:
 
 public:
 	// Methods
+	void clear_display();
 	void initialize();
-	void loadGame(int buffer_size, char* buffer);
+	void loadGame(int file_size, std::vector<char> buffer);
+	void draw(char VX, char VY, char N);
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 	void setKeys();
-
 };
 
