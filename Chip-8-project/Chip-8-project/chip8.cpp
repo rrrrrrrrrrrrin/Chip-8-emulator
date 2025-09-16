@@ -56,23 +56,18 @@ void Chip8::draw(char VX, char VY, char N) {
 	V[0xF] = 0;
 	for (int heightpx = 0; heightpx < N; heightpx++) {
 		// Read N bytes starting from I
-		unsigned char byte = memory[I + heightpx];
+		unsigned short byte = memory[I + heightpx];
 		
 		// Process each byte
 		for (int widthpx = 0; widthpx < 8; widthpx++) {
 			if ((byte & (0x80 >> widthpx)) == 1)  // data & (0x80 >> widthpx) is to parse byte by bits from left to right
 			{
-				if (gfx[X + Y] == 1) {
-					gfx[X + Y] = 0;
-					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision
+				if (gfx[X + widthpx + ((Y + heightpx) * 64)] != 0) {
+					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision occured
 				}
-				else {
-					gfx[X + Y] = 1;
-				}
+				gfx[X + widthpx + ((Y + heightpx) * 64)] ^= 1;
 			}
-			X++;
 		}
-		Y++;
 	}
 }
 
