@@ -41,8 +41,6 @@ void Chip8::initialize()
 	// Reset timers
 	delay_timer = 60;
 	sound_timer = 60;
-
-	bool draw_flag = false;
 }
 
 void Chip8::loadGame(int file_size, std::vector<char> buffer)
@@ -74,7 +72,6 @@ void Chip8::draw(char VX, char VY, char N) {
 			}
 		}
 	}
-	draw_flag = true;
 }
 
 void Chip8::emulateCycle() {
@@ -87,31 +84,39 @@ void Chip8::emulateCycle() {
 	case 0x0000:
 		switch (opcode & 0x000F)
 		{
-			// 00EE: Returns from a subroutine
-		case 0x000E:
-			pc = stack[15];
-			break;
-
-			// 00E0: Clear display
+		// 00E0: Clear display
 		case 0x0000:
 			clear_display();
 			pc += 2;  // opcode is 2 bytes. Move program counter two cells in the memory (one cell - one byte)
 			break;
 
+		// 00EE: Returns from a subroutine
+		case 0x000E:
+			pc = stack[15];
+			break;
+
 		default:
 			printf("Unknown opcode [0x0000]: 0x%X\n", opcode);
 		}
-	break;
-
-	// ANNN: Sets I to the address NNN
-	case 0xA000: 
-		I = opcode & 0x0FFF;
-		pc += 2;
 		break;
 
 	// 1NNN: Jumps to address NNN
 	case 0x1000:
 		pc += opcode & 0x0FFF;
+		break;
+
+	// 3XNN: Skips the next opcode if VX equals NN
+	case 0x3000:
+		if ( (V[opcode & 0x0F00]) == (opcode & 0x00FF) ) {
+			pc += 2;
+		}
+		break;
+
+	// 4XNN: Skips the next opcode if VX equals NN
+	case 0x4000:
+		if ( (V[opcode & 0x0F00]) != (opcode & 0x00FF) ) {
+			pc += 2;
+		}
 		break;
 
 	// 6XNN: Sets VX to NN
@@ -126,11 +131,42 @@ void Chip8::emulateCycle() {
 		pc += 2;
 		break;
 
+	// ANNN: Sets I to the address NNN
+	case 0xA000:
+		I = opcode & 0x0FFF;
+		pc += 2;
+		break;
+
 	// DXYN: Draws a sprite at coordiate (VX, VY), width - 8 pxs, height - N pxs
 	case 0xD000:
 		draw(opcode & 0x0F00, opcode & 0x00F0, opcode & 0x000F); 
 		pc += 2;
 		break;
+
+	case 0xE000:
+		switch (opcode & 0x000F) 
+		{
+		// EX9E: Skip next opcode if key with the value of VX is pressed
+		case 0x000E:
+			// TODO: check if the key is pressed on the keyboard
+			if (V[opcode & 0x0F00]) {
+				pc += 2;
+			}
+			break;
+
+		// EXA1: Skip next opcode if key with the value of VX is not pressed
+		case 0x0000:
+			// TODO:
+			if (!V[opcode & 0x0F00]) {
+				pc += 2;
+			}
+			break;
+
+		default: 
+			printf("Unknown opcode [0xE000]: 0x%X\n", opcode);
+		}
+		break;
+
 
 	default:
 		printf("Unknown opcode: 0x%X\n", opcode);
