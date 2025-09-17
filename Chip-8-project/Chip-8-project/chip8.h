@@ -1,9 +1,6 @@
 #pragma once
 #include <vector>
 
-// Global value
-extern unsigned char gfx[64 * 32];
-
 class Chip8 {
 private:
 	// CPU components
@@ -45,6 +42,8 @@ private:
 	};
 
 public:
+	unsigned char gfx[64 * 32];
+
 	// Methods
 	void clear_display();
 	void initialize();

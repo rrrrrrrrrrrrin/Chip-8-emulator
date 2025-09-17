@@ -104,10 +104,21 @@ void gfxUpdate() {
 	// Create SDL texture: texture will be updated with contents of surface and then rendered to the screen
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	// SDL_LockSurface(surface);
+	// Buffer for converted pixels
+	unsigned int pixels[64 * 32];
+	for (int px = 0; px < 64*32; px++) {
+		if (chip8.gfx[px] == 1) 
+		{
+			pixels[px] = 0xFFFFFFFF;  // White pixel
+		}
+		else
+		{
+			pixels[px] = 0xFF000000;  // Black pixel
+		}
+	}
+
 	// Update SDL texture
-	SDL_UpdateTexture(texture, NULL, gfx, SCREEN_WIDTH * sizeof(unsigned char));
-	// SDL_UnlockSurface(surface);
+	SDL_UpdateTexture(texture, NULL, pixels, SCREEN_WIDTH * 4);
 
 	// Create SDL renderer
 	renderer = SDL_CreateRenderer(window, 0);

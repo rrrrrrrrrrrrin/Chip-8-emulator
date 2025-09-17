@@ -1,8 +1,6 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 
-unsigned char gfx[64 * 32];
-
 void Chip8::clear_display() 
 {
 	for (int i = 0; i < 64 * 32; i++) {
