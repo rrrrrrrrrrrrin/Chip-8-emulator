@@ -1,5 +1,5 @@
 #include "chip8.h"
-#include <iostream>
+#include <cstdio>  // for printf
 
 void Chip8::clear_display() 
 {
@@ -41,6 +41,8 @@ void Chip8::initialize()
 	// Reset timers
 	delay_timer = 60;
 	sound_timer = 60;
+
+	bool draw_flag = false;
 }
 
 void Chip8::loadGame(int file_size, std::vector<char> buffer)
@@ -51,9 +53,12 @@ void Chip8::loadGame(int file_size, std::vector<char> buffer)
 }
 
 void Chip8::draw(char VX, char VY, char N) {
-	char X = V[VX] & 63;
-	char Y = V[VY] & 31;
+	// for the sprites to wrap: x % 64 (display - 64x32) or x & 63
+	char X = V[VX >> 8] & 63;  // move VX (opcode & 0x0F00) to the last nibble left to right
+	char Y = V[VY >> 4] & 31;  // move VY (opcode & 0x00F0) to the last nibble left to right
+
 	V[0xF] = 0;
+
 	for (int heightpx = 0; heightpx < N; heightpx++) {
 		// Read N bytes starting from I
 		unsigned short byte = memory[I + heightpx];
@@ -62,13 +67,14 @@ void Chip8::draw(char VX, char VY, char N) {
 		for (int widthpx = 0; widthpx < 8; widthpx++) {
 			if ((byte & (0x80 >> widthpx)) == 1)  // data & (0x80 >> widthpx) is to parse byte by bits from left to right
 			{
-				if (gfx[X + widthpx + ((Y + heightpx) * 64)] != 0) {
+				if (gfx[X + widthpx + ((Y + heightpx) * 64)] == 1) {
 					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision occured
 				}
 				gfx[X + widthpx + ((Y + heightpx) * 64)] ^= 1;
 			}
 		}
 	}
+	draw_flag = true;
 }
 
 void Chip8::emulateCycle() {
@@ -122,7 +128,7 @@ void Chip8::emulateCycle() {
 
 	// DXYN: Draws a sprite at coordiate (VX, VY), width - 8 pxs, height - N pxs
 	case 0xD000:
-		draw(opcode & 0x0F00, opcode & 0x00F0, opcode & 0x000F);  // for the sprites to wrap: x % 64 (display - 64x32) or x & 63
+		draw(opcode & 0x0F00, opcode & 0x00F0, opcode & 0x000F); 
 		pc += 2;
 		break;
 

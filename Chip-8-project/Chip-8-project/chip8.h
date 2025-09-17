@@ -47,9 +47,14 @@ public:
 	// Methods
 	void clear_display();
 	void initialize();
+
 	void loadGame(int file_size, std::vector<char> buffer);
+
+	bool draw_flag = false;
 	void draw(char VX, char VY, char N);
+
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
+
 	void setKeys();
 };
 
