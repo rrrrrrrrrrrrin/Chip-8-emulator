@@ -61,9 +61,8 @@ int main(int argc, char* argv[])
 		// Emulate one cycle
 		chip8.emulateCycle();
 
-		// TODO : If the draw flag is set, update the screen
-		if (chip8.draw_flag) 
-		{
+		// Update the screen if the draw_flag is true
+		if (chip8.draw_flag) {
 			gfxUpdate();
 		}
 
@@ -99,37 +98,34 @@ bool init() {
 }
 
 void gfxUpdate() {
-	bool quit = false;
-	SDL_Event e;
-	while (!quit)
-	{
-		while ( SDL_PollEvent(&e) )
-		{
-			if (e.type == SDL_EVENT_QUIT) {
-				quit = true;
-			}
-		}
-	}
-
 	// Create SDL surface
 	surface = SDL_CreateSurface(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_PIXELFORMAT_ABGR8888);
 
 	// Create SDL texture: texture will be updated with contents of surface and then rendered to the screen
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	// Update gfx, pixels?
-	SDL_LockSurface(surface);
-	// TODO: Manipulate pixel data of the surface in DXYN (update surface based on gfx)
-	SDL_UnlockSurface(surface);
-
+	// SDL_LockSurface(surface);
 	// Update SDL texture
-	SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
+	SDL_UpdateTexture(texture, NULL, gfx, SCREEN_WIDTH * sizeof(unsigned char));
+	// SDL_UnlockSurface(surface);
 
 	// Create SDL renderer
 	renderer = SDL_CreateRenderer(window, 0);
 	SDL_RenderClear(renderer);
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
+
+	bool quit = false;
+	SDL_Event event;
+	while (!quit)
+	{
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_EVENT_QUIT) {
+				quit = true;
+			}
+		}
+	}
 }
 
 void close() {

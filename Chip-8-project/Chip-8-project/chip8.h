@@ -1,27 +1,28 @@
 #pragma once
 #include <vector>
 
+// Global value
+extern unsigned char gfx[64 * 32];
+
 class Chip8 {
 private:
 	// CPU components
-	unsigned short opcode;  // current opcode
+	unsigned short opcode = 0;  // current opcode
 
-	unsigned char memory[4096];
+	unsigned char memory[4096] = { 0 };
 
-	unsigned char V[16];  // general purpose registers
+	unsigned char V[16] = { 0 };  // general purpose registers
 
 	unsigned short I = 0;  // index register
 	unsigned short pc = 0;  // program counter
 
-	unsigned char gfx[64 * 32];
-
 	unsigned char delay_timer = 60;
 	unsigned char sound_timer = 60;
 
-	unsigned short stack[16];
-	unsigned short sp;  // stack pointer
+	unsigned short stack[16] = { 0 };
+	unsigned short sp = 0;  // stack pointer
 
-	unsigned char key[16];
+	unsigned char key[16] = { 0 };
 
 	unsigned char fontset[80] =
 	{
@@ -49,7 +50,8 @@ public:
 	void initialize();
 
 	void loadGame(int file_size, std::vector<char> buffer);
-
+	
+	bool draw_flag = false;
 	void draw(char VX, char VY, char N);
 
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers

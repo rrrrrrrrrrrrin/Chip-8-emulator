@@ -1,6 +1,8 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 
+unsigned char gfx[64 * 32];
+
 void Chip8::clear_display() 
 {
 	for (int i = 0; i < 64 * 32; i++) {
@@ -20,7 +22,7 @@ void Chip8::initialize()
 
 	// Clear memory
 	for (int i = 0; i < 4096; i++) {
-		memory[0] = 0;
+		memory[i] = 0;
 	}
 
 	// Clear registers V0 - VF
@@ -41,6 +43,8 @@ void Chip8::initialize()
 	// Reset timers
 	delay_timer = 60;
 	sound_timer = 60;
+
+	draw_flag = false;
 }
 
 void Chip8::loadGame(int file_size, std::vector<char> buffer)
@@ -72,6 +76,7 @@ void Chip8::draw(char VX, char VY, char N) {
 			}
 		}
 	}
+	draw_flag = true;
 }
 
 void Chip8::emulateCycle() {
