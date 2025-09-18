@@ -53,6 +53,7 @@ public:
 	bool draw_flag = false;
 	void draw(char VX, char VY, char N);
 
+	void decodeOpcodes();
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
 	void setKeys();

@@ -80,13 +80,17 @@ void Chip8::draw(char VX, char VY, char N)
 	draw_flag = true;
 }
 
+void Chip8::decodeOpcodes() {
+	printf("1 byte: 0x%X\n", memory[pc]);
+	printf("2 byte: 0x%X\n", memory[pc + 1]);
+	printf("Full opcode: 0x%X\n", opcode);
+}
+
 void Chip8::emulateCycle() {
 	// Fetch opcode
 	opcode = memory[pc] << 8 | memory[pc + 1];  // fetch two bytes from memory and merge into one opcode
 	
-	printf("1 byte: 0x%X\n", memory[pc]);
-	printf("2 byte: 0x%X\n", memory[pc + 1]);
-	printf("Full opcode: 0x%X\n", opcode);
+	// decodeOpcodes();
 
 	// Decode opcode
 	switch (opcode & 0xF000)  // check opcode via rightmost nibble 
