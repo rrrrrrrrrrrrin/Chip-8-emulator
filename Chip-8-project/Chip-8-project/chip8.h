@@ -42,13 +42,13 @@ private:
 	};
 
 public:
-	unsigned char gfx[64 * 32];
+	unsigned char gfx[64 * 32] = { 0 };
 
 	// Methods
 	void clear_display();
 	void initialize();
 
-	void loadGame(int file_size, std::vector<char> buffer);
+	void loadROM(int file_size, std::vector<char> buffer);
 	
 	bool draw_flag = false;
 	void draw(char VX, char VY, char N);

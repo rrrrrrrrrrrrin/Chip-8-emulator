@@ -3,13 +3,14 @@
 #include <fstream>
 #include <SDL.h>
 
-const int scale = 20;
-#define SCREEN_WIDTH 64*scale
-#define SCREEN_HEIGHT 32*scale
+bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
 bool init();  // Start SDL and create a window
 void gfxUpdate();
 void close();  // Free resources and close SDL
+
+#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 32
 
 // Global SDL variables
 SDL_Window* window = NULL;
@@ -21,38 +22,16 @@ Chip8 chip8;
 
 int main(int argc, char* argv[]) 
 {
-	if (argc != 2) {
-		printf("%s%s%s\n", "Usage: ", argv[0], " filename");
+	if (!openROM(argc, argv)) 
+	{
+		printf("Failed to open ROM\n");
 		return 1;
 	}
-
-	// Initialize the Chip8 system and load the game into the memory
-	chip8.initialize();
-
-	// TODO : Read the program (argv) in binary mode, parse to buffer
-	char* filename = argv[1];
-	printf("%s\n", filename);
-	std::ifstream file(argv[1], std::ios_base::binary);
-	if (!file.is_open()) {
-		printf("Couldn't open game file");
-		return 2;
-	}
-	
-	file.seekg(0, std::ios::end);
-	int file_size = static_cast<int>(file.tellg());
-	file.seekg(0, std::ios::beg);
-
-	std::vector<char> buffer(file_size);
-	file.read(buffer.data(), file_size);
-	
-	file.close();
-
-	chip8.loadGame(file_size, buffer);
 
 	if (!init()) 
 	{
 		printf("Failed to initialize\n");
-		return 3;
+		return 2;
 	}
 
 	// Emulation loop
@@ -75,7 +54,43 @@ int main(int argc, char* argv[])
 	return 0;
 }
  
-bool init() {
+bool openROM(int argc, char* argv[])
+{
+	bool success = true;
+
+	if (argc != 2) {
+		printf("%s%s%s\n", "Usage: ", argv[0], " filename");
+		return false;
+	}
+
+	// Initialize the Chip8 system and load the game into the memory
+	chip8.initialize();
+
+	// Read the program (argv) in binary mode, parse to buffer
+	char* filename = argv[1];
+	printf("%s\n", filename);
+	std::ifstream file(argv[1], std::ios_base::binary);
+	if (!file.is_open()) {
+		printf("Couldn't open game file");
+		return false;
+	}
+
+	file.seekg(0, std::ios::end);
+	int file_size = static_cast<int>(file.tellg());
+	file.seekg(0, std::ios::beg);
+
+	std::vector<char> buffer(file_size);
+	file.read(buffer.data(), file_size);
+
+	file.close();
+
+	chip8.loadROM(file_size, buffer);
+
+	return true;
+}
+
+bool init() 
+{
 	bool success = true;
 
 	// Initialize SDL
@@ -94,36 +109,52 @@ bool init() {
 		success = false;
 	}
 
-	return success;
-}
-
-void gfxUpdate() {
-	// Create SDL surface
-	surface = SDL_CreateSurface(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_PIXELFORMAT_ABGR8888);
+	// Create SDL renderer
+	renderer = SDL_CreateRenderer(window, 0);
+	if (!renderer)
+	{
+		printf("Couldn't create a renderer: %s\n", SDL_GetError());
+		SDL_Quit(); 
+		success = false;
+	}
 
 	// Create SDL texture: texture will be updated with contents of surface and then rendered to the screen
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+	if (!texture)
+	{
+		printf("Couldn't create a texture: %s\n", SDL_GetError());
+		SDL_Quit();
+		success = false;
+	}
 
+	return success;
+}
+
+void gfxUpdate() 
+{
 	// Buffer for converted pixels
-	unsigned int pixels[64 * 32];
-	for (int px = 0; px < 64*32; px++) {
+	unsigned int pixels[SCREEN_WIDTH * SCREEN_HEIGHT] = { 0 };
+	for (int px = 0; px < SCREEN_WIDTH * SCREEN_HEIGHT; px++) {
 		if (chip8.gfx[px] == 1) 
 		{
-			pixels[px] = 0xFFFFFFFF;  // White pixel
+			pixels[px] = 0xFFFFFFFF;  // White pixel (RGBA)
 		}
 		else
 		{
-			pixels[px] = 0xFF000000;  // Black pixel
+			pixels[px] = 0xFF000000;  // Black pixel (RGBA)
 		}
 	}
 
-	// Update SDL texture
-	SDL_UpdateTexture(texture, NULL, pixels, SCREEN_WIDTH * 4);
+	// Update SDL texture: take the pixel data from the pixels array and copy it to the texture's video memory
+	int pitch = SCREEN_WIDTH * sizeof(unsigned int);  // Pitch is width * bytes per pixel
+	SDL_UpdateTexture(texture, NULL, pixels, pitch); 
 
-	// Create SDL renderer
-	renderer = SDL_CreateRenderer(window, 0);
 	SDL_RenderClear(renderer);
+
+	// Copy the texture to the renderer's buffer
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
+
+	// Present the renderer on the screen
 	SDL_RenderPresent(renderer);
 
 	bool quit = false;
@@ -139,7 +170,8 @@ void gfxUpdate() {
 	}
 }
 
-void close() {
+void close() 
+{
 	// Destroy SDL variables
 	SDL_DestroyWindow(window);
 	window = NULL;
