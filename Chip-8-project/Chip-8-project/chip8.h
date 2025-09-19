@@ -49,7 +49,7 @@ public:
 	void initialize();
 
 	void loadROM(int file_size, std::vector<char> buffer);
-	
+
 	bool draw_flag = false;
 	void draw(char VX, char VY, char N);
 
@@ -58,4 +58,3 @@ public:
 
 	void setKeys();
 };
-

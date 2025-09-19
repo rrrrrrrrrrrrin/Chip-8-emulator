@@ -9,8 +9,14 @@ bool init();  // Start SDL and create a window
 void gfxUpdate();
 void close();  // Free resources and close SDL
 
+// Original Chip-8's resolution
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 32
+
+
+// Parameters of width and height for SDL window
+#define WINDOW_WIDTH 1080
+#define WINDOW_HEIGHT 720
 
 // Global SDL variables
 SDL_Window* window = NULL;
@@ -20,22 +26,22 @@ SDL_Renderer* renderer = NULL;
 
 Chip8 chip8;
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
-	if (!openROM(argc, argv)) 
+	if (!openROM(argc, argv))
 	{
 		printf("Failed to open ROM\n");
 		return 1;
 	}
 
-	if (!init()) 
+	if (!init())
 	{
 		printf("Failed to initialize\n");
 		return 2;
 	}
 
 	// Emulation loop
-	for (;;) 
+	for (;;)
 	{
 		// Emulate one cycle
 		chip8.emulateCycle();
@@ -53,7 +59,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
- 
+
 bool openROM(int argc, char* argv[])
 {
 	bool success = true;
@@ -89,7 +95,7 @@ bool openROM(int argc, char* argv[])
 	return true;
 }
 
-bool init() 
+bool init()
 {
 	bool success = true;
 
@@ -101,7 +107,7 @@ bool init()
 	}
 
 	// Create SDL window
-	window = SDL_CreateWindow("Rin's Chip-8 Emu", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	window = SDL_CreateWindow("Rin's Chip-8 Emu", WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
 	if (!window)
 	{
 		printf("Couldn't create a window: %s\n", SDL_GetError());
@@ -110,11 +116,11 @@ bool init()
 	}
 
 	// Create SDL renderer
-	renderer = SDL_CreateRenderer(window, 0);
+	renderer = SDL_CreateRenderer(window, NULL);
 	if (!renderer)
 	{
 		printf("Couldn't create a renderer: %s\n", SDL_GetError());
-		SDL_Quit(); 
+		SDL_Quit();
 		success = false;
 	}
 
@@ -130,24 +136,24 @@ bool init()
 	return success;
 }
 
-void gfxUpdate() 
+void gfxUpdate()
 {
 	// Buffer for converted pixels
 	unsigned int pixels[SCREEN_WIDTH * SCREEN_HEIGHT] = { 0 };
 	for (int px = 0; px < SCREEN_WIDTH * SCREEN_HEIGHT; px++) {
-		if (chip8.gfx[px] == 1) 
+		if (chip8.gfx[px] == 1)
 		{
-			pixels[px] = 0xFFFFFFFF;  // White pixel (RGBA)
+			pixels[px] = 0xFFFFFFFF;  // White pixel 
 		}
 		else
 		{
-			pixels[px] = 0xFF000000;  // Black pixel (RGBA)
+			pixels[px] = 0xFF000000;  // Black pixel
 		}
 	}
 
 	// Update SDL texture: take the pixel data from the pixels array and copy it to the texture's video memory
 	int pitch = SCREEN_WIDTH * sizeof(unsigned int);  // Pitch is width * bytes per pixel
-	SDL_UpdateTexture(texture, NULL, pixels, pitch); 
+	SDL_UpdateTexture(texture, NULL, pixels, pitch);
 
 	SDL_RenderClear(renderer);
 
@@ -170,7 +176,7 @@ void gfxUpdate()
 	}
 }
 
-void close() 
+void close()
 {
 	// Destroy SDL variables
 	SDL_DestroyWindow(window);

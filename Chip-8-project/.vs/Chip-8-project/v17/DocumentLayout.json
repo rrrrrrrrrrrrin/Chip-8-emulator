@@ -52,7 +52,7 @@
               "RelativeDocumentMoniker": "Chip-8-project\\main.cpp",
               "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\main.cpp",
               "RelativeToolTip": "Chip-8-project\\main.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAQAAAAAAAAAA==",
+              "ViewState": "AgIAAJ0AAAAAAAAAAAAswKoAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-14T10:56:22.287Z",
               "EditorCaption": ""
@@ -65,10 +65,9 @@
               "RelativeDocumentMoniker": "Chip-8-project\\chip8.cpp",
               "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.cpp",
               "RelativeToolTip": "Chip-8-project\\chip8.cpp",
-              "ViewState": "AgIAALkAAAAAAAAAAAAxwFUAAAAnAAAAAAAAAA==",
+              "ViewState": "AgIAAHAAAAAAAAAAAAAxwMoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-14T10:05:15.596Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-14T10:05:15.596Z"
             },
             {
               "$type": "Document",
@@ -78,10 +77,9 @@
               "RelativeDocumentMoniker": "Chip-8-project\\chip8.h",
               "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.h",
               "RelativeToolTip": "Chip-8-project\\chip8.h",
-              "ViewState": "AgIAADAAAAAAAAAAAAAAADYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAC0AAAAAAAAAAAAxwDwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-09-14T10:05:08.075Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-14T10:05:08.075Z"
             }
           ]
         }
