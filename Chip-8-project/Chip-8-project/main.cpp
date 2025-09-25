@@ -163,6 +163,7 @@ void gfxUpdate()
 	// Present the renderer on the screen
 	SDL_RenderPresent(renderer);
 
+	// Leave the window on the screen
 	bool quit = false;
 	SDL_Event event;
 	while (!quit)

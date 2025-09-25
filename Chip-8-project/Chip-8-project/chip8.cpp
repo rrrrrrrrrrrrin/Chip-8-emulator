@@ -114,44 +114,65 @@ void Chip8::emulateCycle() {
 		}
 		break;
 
-		// 1NNN: Jumps to address NNN
+	// 1NNN: Jumps to address NNN
 	case 0x1000:
 		pc += opcode & 0x0FFF;
 		break;
 
-		// 3XNN: Skips the next opcode if VX equals NN
+	// 3XNN: Skips the next opcode if VX equals NN
 	case 0x3000:
 		if ((V[(opcode & 0x0F00) >> 8]) == (opcode & 0x00FF)) {
 			pc += 2;
 		}
 		break;
-
-		// 4XNN: Skips the next opcode if VX equals NN
+		
+	// 4XNN: Skips the next opcode if VX equals NN
 	case 0x4000:
 		if ((V[(opcode & 0x0F00) >> 8]) != (opcode & 0x00FF)) {
 			pc += 2;
 		}
 		break;
+	
+	// 5XY0: Skips the next opcode if VX equals VY
+	case 0x5000:
+		if (V[(opcode & 0x0F00) >> 8] != V[(opcode & 0x00F0) >> 4]) {
+			pc += 2;
+		}
+		break;
 
-		// 6XNN: Sets VX to NN
+	// 6XNN: Sets VX to NN
 	case 0x6000:
 		V[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
 		pc += 2;
 		break;
 
-		// 7XNN: Adds NN to VX
+	// 7XNN: Adds NN to VX
 	case 0x7000:
 		V[(opcode & 0x0F00) >> 8] += opcode & 0x00FF;
 		pc += 2;
 		break;
 
-		// ANNN: Sets I to the address NNN
+	// 8XY0:
+	// 8XY1:
+	// 8XY2:
+	// 8XY3:
+	// 8XY4:
+	// 8XY5:
+	// 8XY6:
+	// 8XY7:
+	// 8XYE:
+	// 9XY0:
+
+	// ANNN: Sets I to the address NNN
 	case 0xA000:
 		I = opcode & 0x0FFF;
 		pc += 2;
 		break;
 
-		// DXYN: Draws a sprite at coordiate (VX, VY), width - 8 pxs, height - N pxs
+	// BNNN:
+	// CXNN:
+
+	// DXYN: Draws a sprite at coordiate (VX, VY), width - 8 pxs, height - N pxs
 	case 0xD000:
 		draw(opcode & 0x0F00, opcode & 0x00F0, opcode & 0x000F);
 		pc += 2;
@@ -160,7 +181,7 @@ void Chip8::emulateCycle() {
 	case 0xE000:
 		switch (opcode & 0x000F)
 		{
-			// EX9E: Skip next opcode if key with the value of VX is pressed
+		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
 			// TODO: check if the key is pressed on the keyboard
 			if (V[(opcode & 0x0F00) >> 8]) {
@@ -168,7 +189,7 @@ void Chip8::emulateCycle() {
 			}
 			break;
 
-			// EXA1: Skip next opcode if key with the value of VX is not pressed
+		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0000:
 			// TODO:
 			if (!V[(opcode & 0x0F00) >> 8]) {
@@ -181,11 +202,21 @@ void Chip8::emulateCycle() {
 		}
 		break;
 
+	// FX07:
+	// FX0A:
+	// FX15:
+	// FX18:
+	// FX1E:
+	// FX29:
+	// FX33:
+	// FX55:
+	// FX65: 
+
+	// TODO: Add Super Chip-48 instructions?
 
 	default:
 		printf("Unknown opcode: 0x%X\n", opcode);
 	}
-
 
 	// Update timers
 	if (delay_timer > 0) {
