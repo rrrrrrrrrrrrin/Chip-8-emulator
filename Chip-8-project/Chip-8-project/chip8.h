@@ -51,7 +51,7 @@ public:
 	void loadROM(int file_size, std::vector<char> buffer);
 
 	bool draw_flag = false;
-	void draw(char VX, char VY, char N);
+	void draw(unsigned int X, unsigned int Y, char N);
 
 	void decodeOpcodes();
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers

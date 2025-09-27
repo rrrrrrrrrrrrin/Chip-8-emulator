@@ -13,16 +13,17 @@ void close();  // Free resources and close SDL
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 32
 
-
 // Parameters of width and height for SDL window
-#define WINDOW_WIDTH 1080
-#define WINDOW_HEIGHT 720
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 320
 
 // Global SDL variables
 SDL_Window* window = NULL;
 SDL_Surface* surface = NULL;  // Surface directly represents Chip-8 display
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
+
+#define DELAY 200  // For delay of window
 
 Chip8 chip8;
 
@@ -133,6 +134,17 @@ bool init()
 		success = false;
 	}
 
+	/*
+	// Set a device-independent resolution and presentation mode for rendering
+	bool presentation = SDL_SetRenderLogicalPresentation(renderer, WINDOW_HEIGHT, WINDOW_WIDTH, SDL_LOGICAL_PRESENTATION_DISABLED);
+	if (!presentation) 
+	{
+		printf("Couldn't create a presentation mode for rendering: %s\n", SDL_GetError());
+		SDL_Quit();
+		success = false;
+	}
+	*/
+
 	return success;
 }
 
@@ -151,8 +163,9 @@ void gfxUpdate()
 		}
 	}
 
+	int pitch = SCREEN_WIDTH * sizeof(unsigned int);  // Pitch: width * bytes per pixel
+
 	// Update SDL texture: take the pixel data from the pixels array and copy it to the texture's video memory
-	int pitch = SCREEN_WIDTH * sizeof(unsigned int);  // Pitch is width * bytes per pixel
 	SDL_UpdateTexture(texture, NULL, pixels, pitch);
 
 	SDL_RenderClear(renderer);
@@ -162,7 +175,9 @@ void gfxUpdate()
 
 	// Present the renderer on the screen
 	SDL_RenderPresent(renderer);
+	SDL_Delay(DELAY);
 
+	/*
 	// Leave the window on the screen
 	bool quit = false;
 	SDL_Event event;
@@ -175,6 +190,7 @@ void gfxUpdate()
 			}
 		}
 	}
+	*/
 }
 
 void close()
