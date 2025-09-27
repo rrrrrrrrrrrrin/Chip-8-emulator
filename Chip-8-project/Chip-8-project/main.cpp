@@ -23,7 +23,7 @@ SDL_Surface* surface = NULL;  // Surface directly represents Chip-8 display
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
 
-#define DELAY 200  // For delay of window
+#define DELAY 10  // For delay of each gfx update frame
 
 Chip8 chip8;
 
@@ -175,6 +175,7 @@ void gfxUpdate()
 
 	// Present the renderer on the screen
 	SDL_RenderPresent(renderer);
+
 	SDL_Delay(DELAY);
 
 	/*

@@ -58,8 +58,6 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 	char VX = V[X] & 63;
 	char VY = V[Y] & 31;
 
-	V[0xF] = 0;
-
 	for (int heightpx = 0; heightpx < N; heightpx++)
 	{
 		// Read N bytes starting from I
@@ -90,7 +88,9 @@ void Chip8::emulateCycle() {
 	// Fetch opcode
 	opcode = memory[pc] << 8 | memory[pc + 1];  // fetch two bytes from memory and merge into one opcode
 
-	// decodeOpcodes();
+	pc += 2;  // opcode is 2 bytes. Move program counter two cells in the memory (one cell - one byte)
+
+	decodeOpcodes();
 
 	unsigned int X = (opcode & 0x0F00) >> 8; // move VX (opcode & 0x0F00) to the last nibble left to right
 	unsigned int Y = (opcode & 0x00F0) >> 4; // move VY (opcode & 0x00F0) to the last nibble left to right
@@ -104,12 +104,12 @@ void Chip8::emulateCycle() {
 		// 00E0: Clear display
 		case 0x0000:
 			clear_display();
-			pc += 2;  // opcode is 2 bytes. Move program counter two cells in the memory (one cell - one byte)
 			break;
 
 		// 00EE: Returns from a subroutine
 		case 0x000E:
-			pc = stack[15];
+			--sp;
+			pc = stack[sp];
 			break;
 
 		default:
@@ -119,7 +119,14 @@ void Chip8::emulateCycle() {
 
 	// 1NNN: Jumps to address NNN
 	case 0x1000:
-		pc += opcode & 0x0FFF;
+		pc = opcode & 0x0FFF;
+		break;
+
+	//2NNN: Call subroutine at nnn
+	case 0x2000:
+		stack[sp] = pc;
+		++sp;
+		pc = opcode & 0x0FFF;
 		break;
 
 	// 3XNN: Skips the next opcode if VX equals NN
@@ -146,13 +153,11 @@ void Chip8::emulateCycle() {
 	// 6XNN: Sets VX to NN
 	case 0x6000:
 		V[X] = opcode & 0x00FF;
-		pc += 2;
 		break;
 
 	// 7XNN: Adds NN to VX
 	case 0x7000:
 		V[X] += opcode & 0x00FF;
-		pc += 2;
 		break;
 
 	case 0x8000:
@@ -161,88 +166,73 @@ void Chip8::emulateCycle() {
 		// 8XY0: Stores the value of register VY in register VX
 		case 0x0000:
 			V[X] = V[Y];
-			pc += 2;
 			break;
 
 		// 8XY1: Set VX = VX OR VY
 		case 0x0001:
 			V[X] |= V[Y];
-			pc += 2;
 			break;
 
 		// 8XY2: Set VX = VX AND VY
 		case 0x0002:
 			V[X] &= V[Y];
-			pc += 2;
 			break;
 
 		// 8XY3:  Set VX = VX XOR VY
 		case 0x0003:
 			V[X] ^= V[Y];
-			pc += 2;
 			break;
 
 		// 8XY4: Set VX = VX + VY, set VF = carry
 		case 0x0004:
 		{
 			unsigned short sum = V[X] + V[Y];
-			V[0xF] = 0;
+			V[X] = sum & 0x00FF;  // Only the lowest (rightmost) 8 bits are stored in VX (if sum is greater than 8 bits)
 
 			// If the result is greater than 8 bits (size of char) (> 255), VF is set to 1
-			// Only the lowest (rightmost) 8 bits are stored in VX
 			if (sum > 255)
 			{
 				V[0xF] = 1;
 			}
-			V[X] = sum & 0x00FF;
-			pc += 2;
 			break;
 		}
 
 		// 8XY5: Set Vx = Vx - Vy, set VF to 1 if VX > VY (no borrow in subtraction)
 		case 0x0005:
-			V[0xF] = 0;
+			V[X] = V[X] - V[Y];
 
 			if (V[X] > V[Y])
 			{
 				V[0xF] = 1;
 			}
-			V[X] = V[X] - V[Y];
-			pc += 2;
 			break;
 
 		// 8XY6: Set VX = VX SHR 1 (VX / 2), set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
 		case 0x0006:
-			V[0xF] = 0;
+			V[X] >>= 1;
 
 			if ((V[X] & 0x0000000F) == 1) {
 				V[0xF] = 1;
 			}
-			V[X] >>= 1; 
-			pc += 2;
 			break;
 
 		// 8XY7: Set VX = VY - VX, set VF to 1 if VY > VX (no borrow in subtraction)
 		case 0x0007:
-			V[0xF] = 0;
+			V[X] = V[Y] - V[X];
 
 			if (V[Y] > V[X])
 			{
 				V[0xF] = 1;
 			}
-			V[X] = V[Y] - V[X];
-			pc += 2;
 			break;
 
 		// 8XYE: Set Vx = Vx SHL 1, set VF to 1 if MSBit is 1
 		case 0x000E:
-			V[0xF] = 0;
+			V[X] <<= 1;
 
 			if ((V[X] & 0xF0000000) == 1) {
 				V[0xF] = 1;
 			}
-			V[X] <<= 1;
-			pc += 2;
 			break;
 
 		default:
@@ -260,7 +250,6 @@ void Chip8::emulateCycle() {
 	// ANNN: Sets I to the address NNN
 	case 0xA000:
 		I = opcode & 0x0FFF;
-		pc += 2;
 		break;
 
 	// BNNN: Jump to location NNN + V0
@@ -271,13 +260,11 @@ void Chip8::emulateCycle() {
 	// CXNN: Set VX = random byte (random number from 0 to 255) AND NN
 	case 0xC000:
 		V[X] = rand() % 256 & opcode & 0x00FF;
-		pc += 2;
 		break;
 
 	// DXYN: Draws a sprite at coordinate (VX, VY), width - 8 pxs, height - N pxs
 	case 0xD000:
 		draw(X, Y, opcode & 0x000F);
-		pc += 2;
 		break;
 
 	case 0xE000:
@@ -310,7 +297,6 @@ void Chip8::emulateCycle() {
 		// FX07: The value of delay_timer is placed into VX
 		case 0x0007:
 			V[X] = delay_timer;
-			pc += 2;
 			break;
 
 		// FX0A:
@@ -324,7 +310,6 @@ void Chip8::emulateCycle() {
 			// FX15: Set delay_timer = VX
 			case 0x0010:
 				delay_timer = V[X];
-				pc += 2;
 				break;
 
 			// FX55: Store registers V0 through VX in memory starting at location I
@@ -332,7 +317,6 @@ void Chip8::emulateCycle() {
 				for (size_t i = 0; i <= X; i++) {
 					memory[I + i] = V[i];
 				}
-				pc += 2;
 				break;
 
 			// FX65: 
@@ -340,7 +324,6 @@ void Chip8::emulateCycle() {
 				for (size_t i = 0; i <= X; i++) {
 					V[i] = memory[I + i];
 				}
-				pc += 2;
 				break;
 
 			default:
@@ -351,19 +334,16 @@ void Chip8::emulateCycle() {
 		// FX18: Set sound_timer = VX
 		case 0x0008:
 			sound_timer = V[X];
-			pc += 2;
 			break;
 
 		// FX1E: Set I = I + Vx
 		case 0x000E:
 			I = I + V[X];
-			pc += 2;
 			break;
 
 		// FX29: Set I = location of sprite for digit Vx
 		case 0x0009:
 			// TODO
-			pc += 2;
 			break;
 
 		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2
@@ -373,7 +353,6 @@ void Chip8::emulateCycle() {
 			memory[I] = VX / 100;
 			memory[I + 1] = VX % 100 / 10;
 			memory[I + 2] = VX % 5;
-			pc += 2;
 			break;
 		}
 
