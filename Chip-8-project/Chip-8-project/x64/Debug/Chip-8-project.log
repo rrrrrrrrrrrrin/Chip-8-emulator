@@ -1,3 +1,2 @@
-﻿  main.cpp
-C:\Users\1\Desktop\Chip-8-emulator\Chip-8-project\Chip-8-project\main.cpp(104,14): warning C4804: '<': unsafe use of type 'bool' in operation
+﻿  chip8.cpp
   Chip-8-project.vcxproj -> C:\Users\1\Desktop\Chip-8-emulator\Chip-8-project\x64\Debug\Chip-8-project.exe

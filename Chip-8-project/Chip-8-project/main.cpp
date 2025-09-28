@@ -22,6 +22,7 @@ SDL_Window* window = NULL;
 SDL_Surface* surface = NULL;  // Surface directly represents Chip-8 display
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
+const bool* keysSDL = NULL;
 
 #define DELAY 10  // For delay of each gfx update frame
 
@@ -47,13 +48,19 @@ int main(int argc, char* argv[])
 		// Emulate one cycle
 		chip8.emulateCycle();
 
+		/*
+		if (keysSDL[SDL_SCANCODE_1] == true) {
+			printf("1 pressed");
+			SDL_PumpEvents();  // Update the event queue and internal input device state
+		}
+		*/
+
 		// Update the screen if the draw_flag is true
 		if (chip8.draw_flag) {
 			gfxUpdate();
 		}
+		
 
-		// Store key press state (Press and Release)
-		chip8.setKeys();
 	}
 
 	close();
@@ -101,7 +108,7 @@ bool init()
 	bool success = true;
 
 	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO) == false)
 	{
 		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
 		success = false;
@@ -144,6 +151,8 @@ bool init()
 		success = false;
 	}
 	*/
+
+	keysSDL = SDL_GetKeyboardState(nullptr);
 
 	return success;
 }

@@ -19,7 +19,7 @@ private:
 	unsigned short stack[16] = { 0 };
 	unsigned short sp = 0;  // stack pointer
 
-	unsigned char key[16] = { 0 };
+	unsigned char keys[16] = { 0 };  // 0 - key not pressed, 1 - key pressed
 
 	unsigned char fontset[80] =
 	{
@@ -56,5 +56,5 @@ public:
 	void decodeOpcodes();
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
-	void setKeys();
+	void update_timers();
 };

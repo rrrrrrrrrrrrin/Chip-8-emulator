@@ -38,11 +38,26 @@ void Chip8::initialize()
 		memory[i] = fontset[i];
 	}
 
+	for (int i = 0; i < 16; i++) {
+		keys[i] = 0;
+	}
+
 	// Reset timers
 	delay_timer = 60;
 	sound_timer = 60;
 
 	draw_flag = false;
+}
+
+void Chip8::update_timers() {
+	if (delay_timer > 0) {
+		--delay_timer;
+	}
+
+	if (sound_timer > 0) {
+		printf("SOUND\n");  // TODO : Make a sound
+		--sound_timer;
+	}
 }
 
 void Chip8::loadROM(int file_size, std::vector<char> buffer)
@@ -273,15 +288,15 @@ void Chip8::emulateCycle() {
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
 			// TODO: check if the key is pressed on the keyboard
-			if (V[X]) {
+			if (keys[V[X]] == 1) {
 				pc += 2;
 			}
 			break;
 
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
-		case 0x0000:
+		case 0x0001: 
 			// TODO:
-			if (!V[X]) {
+			if (keys[V[X]] != 1) {
 				pc += 2;
 			}
 			break;
@@ -299,9 +314,14 @@ void Chip8::emulateCycle() {
 			V[X] = delay_timer;
 			break;
 
-		// FX0A:
+		// FX0A: Wait for a key press, store the value of the key in VX
 		case 0x000A:
-			// TODO
+			pc -= 2;
+			while (keys[V[X]] != 1) 
+			{
+				update_timers();
+			}
+			V[X] = X;
 			break;
 
 		case 0x0005:
@@ -319,7 +339,7 @@ void Chip8::emulateCycle() {
 				}
 				break;
 
-			// FX65: 
+			// FX65: Read registers V0 through Vx from memory starting at location I
 			case 0x0060:
 				for (size_t i = 0; i <= X; i++) {
 					V[i] = memory[I + i];
@@ -336,14 +356,14 @@ void Chip8::emulateCycle() {
 			sound_timer = V[X];
 			break;
 
-		// FX1E: Set I = I + Vx
+		// FX1E: Set I = I + VX
 		case 0x000E:
 			I = I + V[X];
 			break;
 
-		// FX29: Set I = location of sprite for digit Vx
+		// FX29: Set I = location of sprite (font character) for digit VX
 		case 0x0009:
-			// TODO
+			I = V[X];  // VX sprite was written to memory during initialization (fontset). Just point I to the right sprite
 			break;
 
 		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2
@@ -361,23 +381,9 @@ void Chip8::emulateCycle() {
 		}
 		break;
 
-	// TODO: Add Super Chip-48 instructions?
-
 	default:
 		printf("Unknown opcode: 0x%X\n", opcode);
 	}
 
-	// Update timers
-	if (delay_timer > 0) {
-		--delay_timer;
-	}
-
-	if (sound_timer > 0) {
-		printf("SOUND\n");  // TODO : Make a sound
-		--sound_timer;
-	}
-}
-
-void Chip8::setKeys() {
-	// TODO
+	update_timers();
 }
