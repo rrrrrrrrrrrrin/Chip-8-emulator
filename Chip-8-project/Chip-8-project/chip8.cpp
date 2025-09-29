@@ -43,6 +43,10 @@ void Chip8::initialize()
 		keys[i] = 0;
 	}
 
+	// =============FOR THE 5TH TEST=============
+	memory[0x1FF] = 1;
+	// ==========================================
+
 	// Reset timers
 	delay_timer = 60;
 	sound_timer = 60;

@@ -138,16 +138,13 @@ bool init()
 		success = false;
 	}
 
-	/*
-	// Set a device-independent resolution and presentation mode for rendering
-	bool presentation = SDL_SetRenderLogicalPresentation(renderer, WINDOW_HEIGHT, WINDOW_WIDTH, SDL_LOGICAL_PRESENTATION_DISABLED);
-	if (!presentation) 
-	{
-		printf("Couldn't create a presentation mode for rendering: %s\n", SDL_GetError());
+	// Set the texture's scale mode to the nearest neighbor value interpolation method
+	bool scale_mode = SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+	if (!scale_mode) {
+		printf("Couldn't set a texture scale mode: %s\n", SDL_GetError());
 		SDL_Quit();
 		success = false;
 	}
-	*/
 
 	keysSDL = SDL_GetKeyboardState(nullptr);
 
@@ -176,8 +173,9 @@ void gfxUpdate()
 
 	SDL_RenderClear(renderer);
 
-	// Copy the texture to the renderer's buffer
-	SDL_RenderTexture(renderer, texture, NULL, NULL);
+	// Stretch Chip-8's 64x32 texture to fill the WINDOW_WIDTH x WINDOW_HEIGHT window
+	SDL_FRect destRect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
+	SDL_RenderTexture(renderer, texture, NULL, &destRect);
 
 	// Present the renderer on the screen
 	SDL_RenderPresent(renderer);
