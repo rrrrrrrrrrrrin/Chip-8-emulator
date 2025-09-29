@@ -2,6 +2,7 @@
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL.h>
+#include <iostream>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
@@ -19,7 +20,6 @@ void close();  // Free resources and close SDL
 
 // Global SDL variables
 SDL_Window* window = NULL;
-SDL_Surface* surface = NULL;  // Surface directly represents Chip-8 display
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
 const bool* keysSDL = NULL;
@@ -48,19 +48,16 @@ int main(int argc, char* argv[])
 		// Emulate one cycle
 		chip8.emulateCycle();
 
-		/*
-		if (keysSDL[SDL_SCANCODE_1] == true) {
-			printf("1 pressed");
-			SDL_PumpEvents();  // Update the event queue and internal input device state
-		}
-		*/
-
 		// Update the screen if the draw_flag is true
 		if (chip8.draw_flag) {
 			gfxUpdate();
 		}
 		
-
+		chip8.setKeys(keysSDL);
+		if (keysSDL[SDL_SCANCODE_1] == true) {
+			std::cout << "KEY 11111111111111111111111111" << keysSDL[SDL_SCANCODE_1] << '\n';
+		}
+			SDL_PumpEvents();  // Update the event queue and internal input device state
 	}
 
 	close();
@@ -208,12 +205,10 @@ void close()
 	// Destroy SDL variables
 	SDL_DestroyWindow(window);
 	window = NULL;
-	SDL_DestroySurface(surface);
-	surface = NULL;
-	SDL_DestroyTexture(texture);
-	texture = NULL;
 	SDL_DestroyRenderer(renderer);
 	renderer = NULL;
+	SDL_DestroyTexture(texture);
+	texture = NULL;
 
 	// Quit SDL subsystems
 	SDL_Quit();

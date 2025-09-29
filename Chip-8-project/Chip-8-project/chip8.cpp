@@ -1,5 +1,6 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
+#include <SDL_scancode.h>
 
 void Chip8::clear_display()
 {
@@ -96,7 +97,7 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 void Chip8::decodeOpcodes() {
 	printf("1 byte: 0x%X\n", memory[pc]);
 	printf("2 byte: 0x%X\n", memory[pc + 1]);
-	printf("Full opcode: 0x%X\n", opcode);
+ 	printf("Full opcode: 0x%X\n", opcode);
 }
 
 void Chip8::emulateCycle() {
@@ -241,7 +242,7 @@ void Chip8::emulateCycle() {
 			}
 			break;
 
-		// 8XYE: Set Vx = Vx SHL 1, set VF to 1 if MSBit is 1
+		// 8XYE: Set VX = VX SHL 1, set VF to 1 if MSBit is 1
 		case 0x000E:
 			V[X] <<= 1;
 
@@ -255,7 +256,7 @@ void Chip8::emulateCycle() {
 		}
 		break;
 
-	// 9XY0:
+	// 9XY0: Skip next instruction if VX != VY
 	case 0x9000:
 		if (V[X] != V[Y]) {
 			pc += 2;
@@ -287,7 +288,6 @@ void Chip8::emulateCycle() {
 		{
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
-			// TODO: check if the key is pressed on the keyboard
 			if (keys[V[X]] == 1) {
 				pc += 2;
 			}
@@ -295,7 +295,6 @@ void Chip8::emulateCycle() {
 
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0001: 
-			// TODO:
 			if (keys[V[X]] != 1) {
 				pc += 2;
 			}
@@ -316,13 +315,22 @@ void Chip8::emulateCycle() {
 
 		// FX0A: Wait for a key press, store the value of the key in VX
 		case 0x000A:
-			pc -= 2;
-			while (keys[V[X]] != 1) 
+		{
+			unsigned char key = 'K';
+			while (key == 'K')
 			{
-				update_timers();
+				for (int i = 0; i <= 0xF; i++) {
+					if (keys[i] == 1) {
+						key = keys[i];
+						V[X] = i;
+						break;
+					}
+					pc -= 2;
+					update_timers();
+				}
 			}
-			V[X] = X;
 			break;
+		}
 
 		case 0x0005:
 			switch (opcode & 0x00F0)
@@ -363,7 +371,8 @@ void Chip8::emulateCycle() {
 
 		// FX29: Set I = location of sprite (font character) for digit VX
 		case 0x0009:
-			I = V[X];  // VX sprite was written to memory during initialization (fontset). Just point I to the right sprite
+			// VX sprite was written to memory during initialization, bcs fontset was saved in memory starting at location 80. Each sprite consists of 5 bytes (only consider the lowest nibble). Just point I to the right sprite
+			I = 80 + (5 * V[X]);
 			break;
 
 		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2
@@ -386,4 +395,41 @@ void Chip8::emulateCycle() {
 	}
 
 	update_timers();
+}
+
+void Chip8::setKeys(const bool* keysSDL)
+{
+	/* 
+	COSMAC VIP's Chip-8   Customary modern PC's 
+	keyboard layout:	  Chip-8 keyboard layout:
+	1 2 3 C				  1 2 3 4
+	4 5 6 D			      Q W E R
+	7 8 9 E               A S D F
+	A 0 B F               Z X C V
+	*/
+
+	if (keysSDL[SDL_SCANCODE_1]) { keys[1] = 1; } else 
+	if (keysSDL[SDL_SCANCODE_2]) { keys[2] = 1; } else
+	if (keysSDL[SDL_SCANCODE_3]) { keys[3] = 1; } else
+	if (keysSDL[SDL_SCANCODE_4]) { keys[0xC] = 1; } else
+
+	if (keysSDL[SDL_SCANCODE_Q]) { keys[4] = 1; } else
+	if (keysSDL[SDL_SCANCODE_W]) { keys[5] = 1; } else
+	if (keysSDL[SDL_SCANCODE_E]) { keys[6] = 1; } else
+	if (keysSDL[SDL_SCANCODE_R]) { keys[0xD] = 1; } else
+
+	if (keysSDL[SDL_SCANCODE_A]) { keys[7] = 1; } else
+	if (keysSDL[SDL_SCANCODE_S]) { keys[8] = 1; } else
+	if (keysSDL[SDL_SCANCODE_D]) { keys[9] = 1; } else
+	if (keysSDL[SDL_SCANCODE_F]) { keys[0xE] = 1; } else
+
+	if (keysSDL[SDL_SCANCODE_Z]) { keys[0xA] = 1; } else
+	if (keysSDL[SDL_SCANCODE_X]) { keys[0] = 1; } else
+	if (keysSDL[SDL_SCANCODE_C]) { keys[0xB] = 1; } else
+	if (keysSDL[SDL_SCANCODE_V]) { keys[0xF] = 1; }
+
+	else
+	{
+		printf("Unknown scancode\n");
+	}
 }

@@ -21,6 +21,7 @@ private:
 
 	unsigned char keys[16] = { 0 };  // 0 - key not pressed, 1 - key pressed
 
+	// Each sprite (font character) is made up of 5 bytes
 	unsigned char fontset[80] =
 	{
 		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -57,4 +58,6 @@ public:
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
 	void update_timers();
+
+	void setKeys(const bool* keysSDL);
 };
