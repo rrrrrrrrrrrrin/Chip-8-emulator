@@ -3,6 +3,15 @@
 #include <cstring>  // for memset
 #include <SDL_scancode.h>
 
+// Key press surfaces constants
+enum KeyPressSurfaces
+{
+	KEY_PRESS_SURFACE_UP = SDL_SCANCODE_F,  // keys[0xE]
+	KEY_PRESS_SURFACE_DOWN = SDL_SCANCODE_V,  // keys[0xF]
+	KEY_PRESS_SURFACE_LEFT,
+	KEY_PRESS_SURFACE_RIGHT,
+};
+
 void Chip8::clear_display()
 {
 	std::memset(gfx, 0, sizeof(gfx));
@@ -308,18 +317,27 @@ void Chip8::emulateCycle() {
 		// FX0A: Wait for a key press, store the value of the key in VX
 		case 0x000A:
 		{
-			unsigned char key = 'K';
-			while (key == 'K')
+			unsigned char key = 0;
+			while (true)
 			{
-				for (int i = 0; i <= 0xF; i++) {
+				for (unsigned char i = 0; i <= 0xF; i++) {
 					if (keys[i] == 1) {
-						key = keys[i];
-						V[X] = i;
+						key = i;
+						while (keys[i] == 1) {
+							if (sound_timer == 0 and keys[i] == 0) {
+								break;
+							}
+
+							// TODO: Make a sound
+							sound_timer = 4;  // To continue sound
+						}
 						break;
 					}
-					pc -= 2;
-					update_timers();
 				}
+				V[X] = key;
+				pc -= 2;
+				update_timers();
+				break;
 			}
 			break;
 		}
