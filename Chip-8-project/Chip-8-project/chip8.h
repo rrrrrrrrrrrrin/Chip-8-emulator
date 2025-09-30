@@ -45,6 +45,8 @@ private:
 public:
 	unsigned char gfx[64 * 32] = { 0 };
 
+	unsigned char* get_keys() { return keys; };
+
 	// Methods
 	void clear_display();
 	void initialize();

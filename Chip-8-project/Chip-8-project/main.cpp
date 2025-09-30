@@ -54,10 +54,12 @@ int main(int argc, char* argv[])
 		}
 		
 		chip8.setKeys(keysSDL);
-		if (keysSDL[SDL_SCANCODE_1] == true) {
-			std::cout << "KEY 11111111111111111111111111" << keysSDL[SDL_SCANCODE_1] << '\n';
+		if (keysSDL[SDL_SCANCODE_1]) {
+			std::cout << "KEY 11111111111111111111111111 " << keysSDL[SDL_SCANCODE_1] << " " << chip8.get_keys()[1] << '\n';
 		}
-			SDL_PumpEvents();  // Update the event queue and internal input device state
+
+		std::cout << chip8.get_keys()[1] << '\n';
+		SDL_PumpEvents();  // Update the event queue and internal input device state
 	}
 
 	close();

@@ -1,12 +1,11 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
+#include <cstring>  // for memset
 #include <SDL_scancode.h>
 
 void Chip8::clear_display()
 {
-	for (int i = 0; i < 64 * 32; i++) {
-		gfx[i] = 0;
-	}
+	std::memset(gfx, 0, sizeof(gfx));
 }
 
 // Methods
@@ -20,32 +19,21 @@ void Chip8::initialize()
 	clear_display();
 
 	// Clear memory
-	for (int i = 0; i < 4096; i++) {
-		memory[i] = 0;
-	}
+	std::memset(memory, 0, sizeof(memory));
 
 	// Clear registers V0 - VF
-	for (int i = 0; i < 16; i++) {
-		V[i] = 0;
-	}
+	std::memset(V, 0, sizeof(V));
 
 	// Clear stack
-	for (int i = 0; i < 16; i++) {
-		stack[i] = 0;
-	}
+	std::memset(stack, 0, sizeof(stack));
+
+	// Clear keys state
+	std::memset(keys, 0, sizeof(keys));
 
 	// Load the fontset (group of sprites representing 0-F stored in memory to 0x50)
 	for (int i = 0; i < 80; i++) {
 		memory[i] = fontset[i];
 	}
-
-	for (int i = 0; i < 16; i++) {
-		keys[i] = 0;
-	}
-
-	// =============FOR THE 5TH TEST=============
-	memory[0x1FF] = 1;
-	// ==========================================
 
 	// Reset timers
 	delay_timer = 60;
