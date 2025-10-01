@@ -65,13 +65,9 @@ public:
 	unsigned char gfx[64 * 32] = { 0 };
 
 	const bool* keysSDL = NULL;
-
-	bool init();
-
 	void setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key);
 	void setKeys(unsigned int X);
 
-	// Methods
 	void clear_display();
 	void initialize();
 
@@ -83,5 +79,6 @@ public:
 	void decodeOpcodes();
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
+	bool sound_flag = false;
 	void update_timers();
 };

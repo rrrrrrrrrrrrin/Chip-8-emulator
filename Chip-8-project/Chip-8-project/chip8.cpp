@@ -2,23 +2,6 @@
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
 #include <SDL.h>
-#include <SDL_audio.h>
-
-bool Chip8::init()
-{
-	bool success = true;
-
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_AUDIO) == false)
-	{
-		printf("Couldn't initialize SDL_audio: %s\n", SDL_GetError());
-		success = false;
-	}
-
-	keysSDL = SDL_GetKeyboardState(nullptr);
-
-	return success;
-}
 
 /*
 enum typdef KeyPressSurfaces
@@ -63,7 +46,9 @@ void Chip8::initialize()
 	delay_timer = 60;
 	sound_timer = 60;
 
+	// Reset flags
 	draw_flag = false;
+	sound_flag = false;
 }
 
 void Chip8::update_timers() {
@@ -72,7 +57,6 @@ void Chip8::update_timers() {
 	}
 
 	if (sound_timer > 0) {
-		printf("SOUND\n");  // TODO : Make a sound
 		--sound_timer;
 	}
 }
@@ -413,7 +397,7 @@ void Chip8::emulateCycle() {
 void Chip8::setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key)
 {
 	while (keysSDL[SDL_SCANCODE]) {
-		// TODO: Make a sound
+		sound_flag = true;
 		sound_timer = 60;  // To continue sound
 		update_timers();
 	}

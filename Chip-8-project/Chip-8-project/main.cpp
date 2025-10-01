@@ -2,6 +2,8 @@
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL.h>
+#include <SDL_audio.h>
+// #include <SDL_mixer.h>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
@@ -49,6 +51,10 @@ int main(int argc, char* argv[])
 		// Update the screen if the draw_flag is true
 		if (chip8.draw_flag) {
 			gfxUpdate();
+		}
+
+		if (chip8.sound_flag) {
+			//TODO
 		}
 
 		SDL_PumpEvents();  // Update the event queue and internal input device state
@@ -99,7 +105,7 @@ bool initSDL()
 	bool success = true;
 
 	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) == false)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == false)
 	{
 		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
 		success = false;
