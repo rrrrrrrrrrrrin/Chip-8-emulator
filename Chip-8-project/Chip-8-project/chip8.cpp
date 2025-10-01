@@ -289,23 +289,27 @@ void Chip8::emulateCycle() {
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
 		{
+			/*
 			SDL_Scancode SDL_SCANCODE = keys[V[X]];
 			if (keysSDL[SDL_SCANCODE] == true) {
 				pc += 2;
 			}
 			SDL_PumpEvents();
 			break;
+			*/
 		}
 
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0001:
 		{
+			/*
 			SDL_Scancode SDL_SCANCODE = keys[V[X]];
 			if (keysSDL[SDL_SCANCODE] == false) {
 				pc += 2;
 			}
 			SDL_PumpEvents();
 			break;
+			*/
 		}
 
 		default:

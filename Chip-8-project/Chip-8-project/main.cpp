@@ -3,7 +3,7 @@
 #include <fstream>
 #include <SDL.h>
 #include <SDL_audio.h>
-// #include <SDL_mixer.h>
+#include <SDL_mixer.h>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
