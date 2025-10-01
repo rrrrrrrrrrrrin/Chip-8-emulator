@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <SDL_scancode.h>
 
 class Chip8 {
 private:
@@ -18,8 +19,6 @@ private:
 
 	unsigned short stack[16] = { 0 };
 	unsigned short sp = 0;  // stack pointer
-
-	unsigned char keys[16] = { 0 };  // 0 - key not pressed, 1 - key pressed
 
 	// Each sprite (font character) is made up of 5 bytes
 	unsigned char fontset[80] =
@@ -42,10 +41,35 @@ private:
 		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
 
+	SDL_Scancode keys[16] =
+	{
+		SDL_SCANCODE_X,  // 0
+		SDL_SCANCODE_1,  // 1
+		SDL_SCANCODE_2,  // 2
+		SDL_SCANCODE_3,  // 3
+		SDL_SCANCODE_Q,  // 4
+		SDL_SCANCODE_W,  // 5
+		SDL_SCANCODE_E,  // 6
+		SDL_SCANCODE_A,  // 7
+		SDL_SCANCODE_S,  // 8
+		SDL_SCANCODE_D,  // 9
+		SDL_SCANCODE_Z,  // A
+		SDL_SCANCODE_C,  // B
+		SDL_SCANCODE_4,  // C
+		SDL_SCANCODE_R,  // D
+		SDL_SCANCODE_F,  // E
+		SDL_SCANCODE_V   // F
+	};
+
 public:
 	unsigned char gfx[64 * 32] = { 0 };
 
-	unsigned char* get_keys() { return keys; };
+	const bool* keysSDL = NULL;
+
+	bool init();
+
+	void setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key);
+	void setKeys(unsigned int X);
 
 	// Methods
 	void clear_display();
@@ -60,6 +84,4 @@ public:
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
 	void update_timers();
-
-	void setKeys(const bool* keysSDL);
 };

@@ -1,16 +1,34 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
-#include <SDL_scancode.h>
+#include <SDL.h>
+#include <SDL_audio.h>
 
-// Key press surfaces constants
-enum KeyPressSurfaces
+bool Chip8::init()
+{
+	bool success = true;
+
+	// Initialize SDL
+	if (SDL_Init(SDL_INIT_AUDIO) == false)
+	{
+		printf("Couldn't initialize SDL_audio: %s\n", SDL_GetError());
+		success = false;
+	}
+
+	keysSDL = SDL_GetKeyboardState(nullptr);
+
+	return success;
+}
+
+/*
+enum typdef KeyPressSurfaces
 {
 	KEY_PRESS_SURFACE_UP = SDL_SCANCODE_F,  // keys[0xE]
 	KEY_PRESS_SURFACE_DOWN = SDL_SCANCODE_V,  // keys[0xF]
 	KEY_PRESS_SURFACE_LEFT,
 	KEY_PRESS_SURFACE_RIGHT,
 };
+*/
 
 void Chip8::clear_display()
 {
@@ -35,9 +53,6 @@ void Chip8::initialize()
 
 	// Clear stack
 	std::memset(stack, 0, sizeof(stack));
-
-	// Clear keys state
-	std::memset(keys, 0, sizeof(keys));
 
 	// Load the fontset (group of sprites representing 0-F stored in memory to 0x50)
 	for (int i = 0; i < 80; i++) {
@@ -289,17 +304,25 @@ void Chip8::emulateCycle() {
 		{
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
-			if (keys[V[X]] == 1) {
+		{
+			SDL_Scancode SDL_SCANCODE = keys[V[X]];
+			if (keysSDL[SDL_SCANCODE] == true) {
 				pc += 2;
 			}
+			SDL_PumpEvents();
 			break;
+		}
 
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
-		case 0x0001: 
-			if (keys[V[X]] != 1) {
+		case 0x0001:
+		{
+			SDL_Scancode SDL_SCANCODE = keys[V[X]];
+			if (keysSDL[SDL_SCANCODE] == false) {
 				pc += 2;
 			}
+			SDL_PumpEvents();
 			break;
+		}
 
 		default:
 			printf("Unknown opcode [0xE000]: 0x%X\n", opcode);
@@ -317,28 +340,8 @@ void Chip8::emulateCycle() {
 		// FX0A: Wait for a key press, store the value of the key in VX
 		case 0x000A:
 		{
-			unsigned char key = 0;
-			while (true)
-			{
-				for (unsigned char i = 0; i <= 0xF; i++) {
-					if (keys[i] == 1) {
-						key = i;
-						while (keys[i] == 1) {
-							if (sound_timer == 0 and keys[i] == 0) {
-								break;
-							}
-
-							// TODO: Make a sound
-							sound_timer = 4;  // To continue sound
-						}
-						break;
-					}
-				}
-				V[X] = key;
-				pc -= 2;
-				update_timers();
-				break;
-			}
+			pc -= 2;  // Decrement because pc was incremented already in the fetch step. pc will be incremented again if the key is pressed
+			// setKeys(X);
 			break;
 		}
 
@@ -407,7 +410,18 @@ void Chip8::emulateCycle() {
 	update_timers();
 }
 
-void Chip8::setKeys(const bool* keysSDL)
+void Chip8::setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key)
+{
+	while (keysSDL[SDL_SCANCODE]) {
+		// TODO: Make a sound
+		sound_timer = 60;  // To continue sound
+		update_timers();
+	}
+	V[X] = key;
+	pc += 2;
+}
+
+void Chip8::setKeys(unsigned int X)
 {
 	/* 
 	COSMAC VIP's Chip-8   Customary modern PC's 
@@ -418,28 +432,32 @@ void Chip8::setKeys(const bool* keysSDL)
 	A 0 B F               Z X C V
 	*/
 
-	if (keysSDL[SDL_SCANCODE_1]) { keys[1] = 1; } else 
-	if (keysSDL[SDL_SCANCODE_2]) { keys[2] = 1; } else
-	if (keysSDL[SDL_SCANCODE_3]) { keys[3] = 1; } else
-	if (keysSDL[SDL_SCANCODE_4]) { keys[0xC] = 1; } else
-
-	if (keysSDL[SDL_SCANCODE_Q]) { keys[4] = 1; } else
-	if (keysSDL[SDL_SCANCODE_W]) { keys[5] = 1; } else
-	if (keysSDL[SDL_SCANCODE_E]) { keys[6] = 1; } else
-	if (keysSDL[SDL_SCANCODE_R]) { keys[0xD] = 1; } else
-
-	if (keysSDL[SDL_SCANCODE_A]) { keys[7] = 1; } else
-	if (keysSDL[SDL_SCANCODE_S]) { keys[8] = 1; } else
-	if (keysSDL[SDL_SCANCODE_D]) { keys[9] = 1; } else
-	if (keysSDL[SDL_SCANCODE_F]) { keys[0xE] = 1; } else
-
-	if (keysSDL[SDL_SCANCODE_Z]) { keys[0xA] = 1; } else
-	if (keysSDL[SDL_SCANCODE_X]) { keys[0] = 1; } else
-	if (keysSDL[SDL_SCANCODE_C]) { keys[0xB] = 1; } else
-	if (keysSDL[SDL_SCANCODE_V]) { keys[0xF] = 1; }
-
-	else
+	while (true) 
 	{
-		printf("Unknown scancode\n");
+		if (keysSDL[SDL_SCANCODE_1]) { setKey(X, SDL_SCANCODE_1, 1); }   else 
+		if (keysSDL[SDL_SCANCODE_2]) { setKey(X, SDL_SCANCODE_2, 2); }   else
+		if (keysSDL[SDL_SCANCODE_3]) { setKey(X, SDL_SCANCODE_2, 2); }   else
+		if (keysSDL[SDL_SCANCODE_4]) { setKey(X, SDL_SCANCODE_4, 0xC); } else
+
+		if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, SDL_SCANCODE_Q, 4); }   else
+		if (keysSDL[SDL_SCANCODE_W]) { setKey(X, SDL_SCANCODE_W, 5); }   else
+		if (keysSDL[SDL_SCANCODE_E]) { setKey(X, SDL_SCANCODE_E, 6); }   else
+		if (keysSDL[SDL_SCANCODE_R]) { setKey(X, SDL_SCANCODE_R, 0xD); } else
+
+		if (keysSDL[SDL_SCANCODE_A]) { setKey(X, SDL_SCANCODE_A, 7); }   else
+		if (keysSDL[SDL_SCANCODE_S]) { setKey(X, SDL_SCANCODE_S, 8); }   else
+		if (keysSDL[SDL_SCANCODE_D]) { setKey(X, SDL_SCANCODE_D, 9); }   else
+		if (keysSDL[SDL_SCANCODE_F]) { setKey(X, SDL_SCANCODE_F, 0xE); } else
+
+		if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, SDL_SCANCODE_Z, 0xA); } else
+		if (keysSDL[SDL_SCANCODE_X]) { setKey(X, SDL_SCANCODE_X, 0); }   else
+		if (keysSDL[SDL_SCANCODE_C]) { setKey(X, SDL_SCANCODE_C, 0xB); } else
+		if (keysSDL[SDL_SCANCODE_V]) { setKey(X, SDL_SCANCODE_V, 0xF); }
+
+		else
+		{
+			printf("Unknown scancode\n");
+		}
 	}
+	SDL_PumpEvents();
 }

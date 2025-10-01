@@ -2,11 +2,10 @@
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL.h>
-#include <iostream>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
-bool init();  // Start SDL and create a window
+bool initSDL();  // Start SDL and create a window
 void gfxUpdate();
 void close();  // Free resources and close SDL
 
@@ -22,7 +21,6 @@ void close();  // Free resources and close SDL
 SDL_Window* window = NULL;
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
-const bool* keysSDL = NULL;
 
 #define DELAY 10  // For delay of each gfx update frame
 
@@ -36,7 +34,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if (!init())
+	if (!initSDL())
 	{
 		printf("Failed to initialize\n");
 		return 2;
@@ -52,13 +50,7 @@ int main(int argc, char* argv[])
 		if (chip8.draw_flag) {
 			gfxUpdate();
 		}
-		
-		chip8.setKeys(keysSDL);
-		if (keysSDL[SDL_SCANCODE_1]) {
-			std::cout << "KEY 11111111111111111111111111 " << keysSDL[SDL_SCANCODE_1] << " " << chip8.get_keys()[1] << '\n';
-		}
 
-		std::cout << chip8.get_keys()[1] << '\n';
 		SDL_PumpEvents();  // Update the event queue and internal input device state
 	}
 
@@ -102,7 +94,7 @@ bool openROM(int argc, char* argv[])
 	return true;
 }
 
-bool init()
+bool initSDL()
 {
 	bool success = true;
 
@@ -147,8 +139,6 @@ bool init()
 		SDL_Quit();
 		success = false;
 	}
-
-	keysSDL = SDL_GetKeyboardState(nullptr);
 
 	return success;
 }
