@@ -3,12 +3,13 @@
 #include <fstream>
 #include <SDL.h>
 #include <SDL_audio.h>
-#include <SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
-bool initSDL();  // Start SDL and create a window
+bool initSDL();  // Start SDL (Video, Audio) and SDL_mixer
 void gfxUpdate();
+bool loadSound();
 void close();  // Free resources and close SDL
 
 // Original Chip-8's resolution
@@ -23,6 +24,13 @@ void close();  // Free resources and close SDL
 SDL_Window* window = NULL;
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
+
+// Global SDL_mixer variables
+MIX_Mixer* mixer = NULL;
+MIX_Audio* sound = NULL;
+SDL_AudioSpec* spec = NULL;
+Uint8** audio_buf = NULL;
+Uint32* audio_len = NULL;
 
 #define DELAY 10  // For delay of each gfx update frame
 
@@ -54,7 +62,7 @@ int main(int argc, char* argv[])
 		}
 
 		if (chip8.sound_flag) {
-			//TODO
+			// MIX_PlayAudio(mixer, sound);
 		}
 
 		SDL_PumpEvents();  // Update the event queue and internal input device state
@@ -110,6 +118,22 @@ bool initSDL()
 		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
 		success = false;
 	}
+
+	/*
+	// Initialize SDL_mixer
+	if (MIX_Init() == false)
+	{
+		printf("Couldn't intialize SDL_mixer (MIX_Init): %s\n", SDL_GetError());
+		success = false;
+	}
+
+	mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+	if (!mixer) 
+	{
+		printf("Couldn't intialize SDL_mixer (MIX_CreateMixerDevice): %s\n", SDL_GetError());
+		success = false;
+	}
+	*/
 
 	// Create SDL window
 	window = SDL_CreateWindow("Rin's Chip-8 Emu", WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
@@ -196,16 +220,34 @@ void gfxUpdate()
 	*/
 }
 
+bool loadSound() {
+	if (!SDL_LoadWAV("sound.wav", spec, audio_buf, audio_len)) 
+	{
+		printf("Couldn't load WAV: %s\n", SDL_GetError());
+		return false;
+	}
+	return true;
+}
+
 void close()
 {
-	// Destroy SDL variables
+	// Destroy SDL variables 
 	SDL_DestroyWindow(window);
 	window = NULL;
 	SDL_DestroyRenderer(renderer);
 	renderer = NULL;
 	SDL_DestroyTexture(texture);
 	texture = NULL;
+	
+	// MIX_DestroyMixer(mixer);
+	mixer = NULL;
+	// MIX_DestroyAudio(sound);
+	sound = NULL;
+	spec = NULL;
+	audio_buf = NULL;
+	audio_len = NULL;
 
 	// Quit SDL subsystems
 	SDL_Quit();
+	// MIX_Quit();
 }

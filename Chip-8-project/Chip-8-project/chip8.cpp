@@ -57,6 +57,7 @@ void Chip8::update_timers() {
 	}
 
 	if (sound_timer > 0) {
+		sound_timer = true;  // temporary to check sound
 		--sound_timer;
 	}
 }
