@@ -7,6 +7,7 @@ bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
 bool initSDL();  // Start SDL (Video, Audio) and SDL_mixer
 void gfxUpdate();
+bool loadSound();
 void close();  // Free resources and close SDL
 
 // Original Chip-8's resolution
@@ -21,6 +22,12 @@ void close();  // Free resources and close SDL
 SDL_Window* window = NULL;
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
+
+// Global SDL_audio variables
+SDL_AudioSpec* spec = NULL;
+Uint8* audio_buf = NULL;
+Uint32 audio_len = NULL;
+SDL_AudioStream* stream;
 
 #define DELAY 5  // For delay of each gfx update frame
 
@@ -52,7 +59,8 @@ int main(int argc, char* argv[])
 		}
 
 		if (chip8.sound_flag) {
-			
+			// Start playback of the audio device associated with the stream
+			SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream));
 		}
 
 		SDL_PumpEvents();  // Update the event queue and internal input device state
@@ -194,16 +202,50 @@ void gfxUpdate()
 	*/
 }
 
+bool loadSound() 
+{
+	bool success = true;
+
+	if (!SDL_LoadWAV("sound.wav", spec, &audio_buf, &audio_len))
+	{
+		printf("Couldn't load WAV: %s\n", SDL_GetError());
+		success = false;
+	}
+
+	// Open a default playback device and bind an audio stream to it using SDL_OpenAudioDeviceStream
+	stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, spec, NULL, NULL);
+	if (!stream)
+	{
+		printf("Couldn't open audio device stream: %s\n", SDL_GetError());
+		success = false;
+	}
+
+	// Put the loaded audio data into the stream
+	if (!SDL_PutAudioStreamData(stream, audio_buf, audio_len))
+	{
+		printf("Couldn't put audio data into stream: %s\n", SDL_GetError());
+		success = false;
+	}
+
+	return success;
+}
+
 void close()
 {
 	// Destroy SDL variables 
 	SDL_DestroyWindow(window);
-	window = NULL;
+	SDL_free(window);
 	SDL_DestroyRenderer(renderer);
-	renderer = NULL;
+	SDL_free(renderer);
 	SDL_DestroyTexture(texture);
-	texture = NULL;
+	SDL_free(texture);
+
+	// Destroy SDL_audio variables
+	SDL_free(spec);
+	SDL_free(audio_buf);
+	SDL_DestroyAudioStream(stream);
 
 	// Quit SDL subsystems
 	SDL_Quit();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
