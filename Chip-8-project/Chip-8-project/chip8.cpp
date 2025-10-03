@@ -1,17 +1,6 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
-#include <SDL.h>
-
-/*
-enum typdef KeyPressSurfaces
-{
-	KEY_PRESS_SURFACE_UP = SDL_SCANCODE_F,  // keys[0xE]
-	KEY_PRESS_SURFACE_DOWN = SDL_SCANCODE_V,  // keys[0xF]
-	KEY_PRESS_SURFACE_LEFT,
-	KEY_PRESS_SURFACE_RIGHT,
-};
-*/
 
 void Chip8::clear_display()
 {
@@ -290,27 +279,21 @@ void Chip8::emulateCycle() {
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
 		{
-			/*
 			SDL_Scancode SDL_SCANCODE = keys[V[X]];
 			if (keysSDL[SDL_SCANCODE] == true) {
 				pc += 2;
 			}
-			SDL_PumpEvents();
 			break;
-			*/
 		}
 
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0001:
 		{
-			/*
 			SDL_Scancode SDL_SCANCODE = keys[V[X]];
 			if (keysSDL[SDL_SCANCODE] == false) {
 				pc += 2;
 			}
-			SDL_PumpEvents();
 			break;
-			*/
 		}
 
 		default:
@@ -330,7 +313,7 @@ void Chip8::emulateCycle() {
 		case 0x000A:
 		{
 			pc -= 2;  // Decrement because pc was incremented already in the fetch step. pc will be incremented again if the key is pressed
-			// setKeys(X);
+			setKeys(X);
 			break;
 		}
 
@@ -448,5 +431,4 @@ void Chip8::setKeys(unsigned int X)
 			printf("Unknown scancode\n");
 		}
 	}
-	SDL_PumpEvents();
 }

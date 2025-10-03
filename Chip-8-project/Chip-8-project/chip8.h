@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <SDL_scancode.h>
+#include <SDL.h>
 
 class Chip8 {
 private:
@@ -64,7 +64,7 @@ private:
 public:
 	unsigned char gfx[64 * 32] = { 0 };
 
-	const bool* keysSDL = NULL;
+	const bool* keysSDL = SDL_GetKeyboardState(nullptr);
 	void setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key);
 	void setKeys(unsigned int X);
 
