@@ -312,7 +312,6 @@ void Chip8::emulateCycle() {
 		// FX0A: Wait for a key press, store the value of the key in VX
 		case 0x000A:
 		{
-			pc -= 2;  // Decrement because pc was incremented already in the fetch step. pc will be incremented again if the key is pressed
 			setKeys(X);
 			break;
 		}
@@ -384,11 +383,7 @@ void Chip8::emulateCycle() {
 
 void Chip8::setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key)
 {
-	while (keysSDL[SDL_SCANCODE]) {
-		sound_flag = true;
-		sound_timer = 60;  // To continue sound
-		update_timers();
-	}
+	sound_flag = true;
 	V[X] = key;
 	pc += 2;
 }
@@ -404,31 +399,30 @@ void Chip8::setKeys(unsigned int X)
 	A 0 B F               Z X C V
 	*/
 
-	while (true) 
+	if (keysSDL[SDL_SCANCODE_1]) { setKey(X, SDL_SCANCODE_1, 0x1); } else
+	if (keysSDL[SDL_SCANCODE_2]) { setKey(X, SDL_SCANCODE_2, 0x2); } else
+	if (keysSDL[SDL_SCANCODE_3]) { setKey(X, SDL_SCANCODE_3, 0x3); } else
+	if (keysSDL[SDL_SCANCODE_4]) { setKey(X, SDL_SCANCODE_4, 0xC); } else
+
+	if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, SDL_SCANCODE_Q, 0x4); } else
+	if (keysSDL[SDL_SCANCODE_W]) { setKey(X, SDL_SCANCODE_W, 0x5); } else
+	if (keysSDL[SDL_SCANCODE_E]) { setKey(X, SDL_SCANCODE_E, 0x6); } else
+	if (keysSDL[SDL_SCANCODE_R]) { setKey(X, SDL_SCANCODE_R, 0xD); } else
+
+	if (keysSDL[SDL_SCANCODE_A]) { setKey(X, SDL_SCANCODE_A, 0x7); } else
+	if (keysSDL[SDL_SCANCODE_S]) { setKey(X, SDL_SCANCODE_S, 0x8); } else
+	if (keysSDL[SDL_SCANCODE_D]) { setKey(X, SDL_SCANCODE_D, 0x9); } else
+	if (keysSDL[SDL_SCANCODE_F]) { setKey(X, SDL_SCANCODE_F, 0xE); } else
+
+	if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, SDL_SCANCODE_Z, 0xA); } else
+	if (keysSDL[SDL_SCANCODE_X]) { setKey(X, SDL_SCANCODE_X, 0x0); } else
+	if (keysSDL[SDL_SCANCODE_C]) { setKey(X, SDL_SCANCODE_C, 0xB); } else
+	if (keysSDL[SDL_SCANCODE_V]) { setKey(X, SDL_SCANCODE_V, 0xF); }
+
+	else
 	{
-		if (keysSDL[SDL_SCANCODE_1]) { setKey(X, SDL_SCANCODE_1, 1); }   else 
-		if (keysSDL[SDL_SCANCODE_2]) { setKey(X, SDL_SCANCODE_2, 2); }   else
-		if (keysSDL[SDL_SCANCODE_3]) { setKey(X, SDL_SCANCODE_2, 2); }   else
-		if (keysSDL[SDL_SCANCODE_4]) { setKey(X, SDL_SCANCODE_4, 0xC); } else
-
-		if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, SDL_SCANCODE_Q, 4); }   else
-		if (keysSDL[SDL_SCANCODE_W]) { setKey(X, SDL_SCANCODE_W, 5); }   else
-		if (keysSDL[SDL_SCANCODE_E]) { setKey(X, SDL_SCANCODE_E, 6); }   else
-		if (keysSDL[SDL_SCANCODE_R]) { setKey(X, SDL_SCANCODE_R, 0xD); } else
-
-		if (keysSDL[SDL_SCANCODE_A]) { setKey(X, SDL_SCANCODE_A, 7); }   else
-		if (keysSDL[SDL_SCANCODE_S]) { setKey(X, SDL_SCANCODE_S, 8); }   else
-		if (keysSDL[SDL_SCANCODE_D]) { setKey(X, SDL_SCANCODE_D, 9); }   else
-		if (keysSDL[SDL_SCANCODE_F]) { setKey(X, SDL_SCANCODE_F, 0xE); } else
-
-		if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, SDL_SCANCODE_Z, 0xA); } else
-		if (keysSDL[SDL_SCANCODE_X]) { setKey(X, SDL_SCANCODE_X, 0); }   else
-		if (keysSDL[SDL_SCANCODE_C]) { setKey(X, SDL_SCANCODE_C, 0xB); } else
-		if (keysSDL[SDL_SCANCODE_V]) { setKey(X, SDL_SCANCODE_V, 0xF); }
-
-		else
-		{
-			printf("Unknown scancode\n");
-		}
+		pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed) 
+		update_timers();
+		printf("Unknown scancode\n");
 	}
 }

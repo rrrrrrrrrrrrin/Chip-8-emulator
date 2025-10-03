@@ -22,7 +22,7 @@ SDL_Window* window = NULL;
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
 
-#define DELAY 10  // For delay of each gfx update frame
+#define DELAY 5  // For delay of each gfx update frame
 
 Chip8 chip8;
 
