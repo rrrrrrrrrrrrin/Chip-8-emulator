@@ -128,7 +128,7 @@ void Chip8::emulateCycle() {
 		pc = opcode & 0x0FFF;
 		break;
 
-	//2NNN: Call subroutine at nnn
+	// 2NNN: Call subroutine at NNN
 	case 0x2000:
 		stack[sp] = pc;
 		++sp;

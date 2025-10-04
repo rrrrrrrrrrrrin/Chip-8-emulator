@@ -5,9 +5,9 @@
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
-bool initSDL();  // Start SDL (Video, Audio) and SDL_mixer
-void gfxUpdate();
 bool loadSound();
+bool initSDL();  // Start SDL (video, audio)
+void gfxUpdate();
 void close();  // Free resources and close SDL
 
 // Original Chip-8's resolution
@@ -24,12 +24,11 @@ SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
 
 // Global SDL_audio variables
-SDL_AudioSpec* spec = NULL;
+SDL_AudioStream* stream = NULL;
 Uint8* audio_buf = NULL;
-Uint32 audio_len = NULL;
-SDL_AudioStream* stream;
+Uint32 audio_len = 0;
 
-#define DELAY 5  // For delay of each gfx update frame
+#define DELAY 1  // For delay of each gfx update frame
 
 Chip8 chip8;
 
@@ -59,19 +58,26 @@ int main(int argc, char* argv[])
 		}
 
 		if (chip8.sound_flag) {
-			// Start playback of the audio device associated with the stream
-			if (!SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream))) 
+			// Check if the audio stream needs more data
+			if (SDL_GetAudioStreamQueued(stream) < static_cast<int>(audio_len))
+			{
+				// Add data to the audio stream
+				SDL_PutAudioStreamData(stream, audio_buf, audio_len);
+			}
+
+			// SDL_OpenAudioDeviceStream starts the device paused. Start playback of the audio device associated with the stream
+			if (!SDL_ResumeAudioStreamDevice(stream)) 
 			{
 				printf("Couldn't resume audio device: %s\n", SDL_GetError());
 				SDL_QuitSubSystem(SDL_INIT_AUDIO);
 			}
-		}
 
-		// Pause audio playback 
-		if (!SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream)))
-		{
-			printf("Couldn't pause audio device: %s\n", SDL_GetError());
-			SDL_QuitSubSystem(SDL_INIT_AUDIO);
+			// Pause audio playback 
+			if (!SDL_PauseAudioStreamDevice(stream))
+			{
+				printf("Couldn't pause audio device: %s\n", SDL_GetError());
+				SDL_QuitSubSystem(SDL_INIT_AUDIO);
+			}
 		}
 
 		SDL_PumpEvents();  // Update the event queue and internal input device state
@@ -118,6 +124,32 @@ bool openROM(int argc, char* argv[])
 	return true;
 }
 
+bool loadSound()
+{
+	bool success = true;
+
+	SDL_AudioSpec spec;
+
+	// Load the .wav file
+	if (!SDL_LoadWAV("sound.wav", &spec, &audio_buf, &audio_len))
+	{
+		printf("Couldn't load .wav file: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+		success = false;
+	}
+
+	// Create audio stream in the same format as the .wav file
+	stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+	if (!stream)
+	{
+		printf("Couldn't create audio stream: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+		success = false;
+	}
+
+	return success;
+}
+
 bool initSDL()
 {
 	bool success = true;
@@ -128,6 +160,8 @@ bool initSDL()
 		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
 		success = false;
 	}
+
+	loadSound();
 
 	// Create SDL window
 	window = SDL_CreateWindow("Rin's Chip-8 Emu", WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
@@ -214,37 +248,6 @@ void gfxUpdate()
 	*/
 }
 
-bool loadSound() 
-{
-	bool success = true;
-
-	if (!SDL_LoadWAV("sound.wav", spec, &audio_buf, &audio_len))
-	{
-		printf("Couldn't load WAV: %s\n", SDL_GetError());
-		SDL_QuitSubSystem(SDL_INIT_AUDIO);
-		success = false;
-	}
-
-	// Open a default playback device and bind an audio stream to it using SDL_OpenAudioDeviceStream
-	stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, spec, NULL, NULL);
-	if (!stream)
-	{
-		printf("Couldn't open audio device stream: %s\n", SDL_GetError());
-		SDL_QuitSubSystem(SDL_INIT_AUDIO);
-		success = false;
-	}
-
-	// Put the loaded audio data into the stream
-	if (!SDL_PutAudioStreamData(stream, audio_buf, audio_len))
-	{
-		printf("Couldn't put audio data into stream: %s\n", SDL_GetError());
-		SDL_QuitSubSystem(SDL_INIT_AUDIO);
-		success = false;
-	}
-
-	return success;
-}
-
 void close()
 {
 	// Destroy SDL variables 
@@ -256,7 +259,6 @@ void close()
 	SDL_free(texture);
 
 	// Destroy SDL_audio variables
-	SDL_free(spec);
 	SDL_free(audio_buf);
 	SDL_DestroyAudioStream(stream);
 
