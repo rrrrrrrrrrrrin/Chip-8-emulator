@@ -60,7 +60,18 @@ int main(int argc, char* argv[])
 
 		if (chip8.sound_flag) {
 			// Start playback of the audio device associated with the stream
-			SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream));
+			if (!SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream))) 
+			{
+				printf("Couldn't resume audio device: %s\n", SDL_GetError());
+				SDL_QuitSubSystem(SDL_INIT_AUDIO);
+			}
+		}
+
+		// Pause audio playback 
+		if (!SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream)))
+		{
+			printf("Couldn't pause audio device: %s\n", SDL_GetError());
+			SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		}
 
 		SDL_PumpEvents();  // Update the event queue and internal input device state
@@ -87,6 +98,7 @@ bool openROM(int argc, char* argv[])
 	char* filename = argv[1];
 	printf("%s\n", filename);
 	std::ifstream file(argv[1], std::ios_base::binary);
+
 	if (!file.is_open()) {
 		printf("Couldn't open game file");
 		return false;
@@ -209,6 +221,7 @@ bool loadSound()
 	if (!SDL_LoadWAV("sound.wav", spec, &audio_buf, &audio_len))
 	{
 		printf("Couldn't load WAV: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		success = false;
 	}
 
@@ -217,6 +230,7 @@ bool loadSound()
 	if (!stream)
 	{
 		printf("Couldn't open audio device stream: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		success = false;
 	}
 
@@ -224,6 +238,7 @@ bool loadSound()
 	if (!SDL_PutAudioStreamData(stream, audio_buf, audio_len))
 	{
 		printf("Couldn't put audio data into stream: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		success = false;
 	}
 
