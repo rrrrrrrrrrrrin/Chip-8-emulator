@@ -47,8 +47,23 @@ int main(int argc, char* argv[])
 	}
 
 	// Emulation loop
-	for (;;)
+	while (true)
 	{
+		// Process the event queue once every frame before updating the game's state
+		bool quit = false;
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_EVENT_QUIT) {
+				quit = true;
+			}
+		}
+
+		if (quit)
+		{
+			break;
+		}
+
 		// Emulate one cycle
 		chip8.emulateCycle();
 
@@ -66,7 +81,7 @@ int main(int argc, char* argv[])
 			}
 
 			// SDL_OpenAudioDeviceStream starts the device paused. Start playback of the audio device associated with the stream
-			if (!SDL_ResumeAudioStreamDevice(stream)) 
+			if (!SDL_ResumeAudioStreamDevice(stream))
 			{
 				printf("Couldn't resume audio device: %s\n", SDL_GetError());
 				SDL_QuitSubSystem(SDL_INIT_AUDIO);
@@ -231,35 +246,20 @@ void gfxUpdate()
 	SDL_RenderPresent(renderer);
 
 	SDL_Delay(DELAY);
-
-	/*
-	// Leave the window on the screen
-	bool quit = false;
-	SDL_Event event;
-	while (!quit)
-	{
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_EVENT_QUIT) {
-				quit = true;
-			}
-		}
-	}
-	*/
 }
 
 void close()
 {
 	// Destroy SDL variables 
 	SDL_DestroyWindow(window);
-	SDL_free(window);
+	window = NULL;
 	SDL_DestroyRenderer(renderer);
-	SDL_free(renderer);
+	renderer = NULL;
 	SDL_DestroyTexture(texture);
-	SDL_free(texture);
+	texture = NULL;
 
 	// Destroy SDL_audio variables
-	SDL_free(audio_buf);
+	audio_buf = NULL;
 	SDL_DestroyAudioStream(stream);
 
 	// Quit SDL subsystems
