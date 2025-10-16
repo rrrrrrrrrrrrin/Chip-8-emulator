@@ -2,12 +2,22 @@
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL_audio.h>
+#include <SDL_image.h>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
 
-bool loadSound();
 bool initSDL();  // Start SDL (video, audio)
+
+bool loadSound();
+void playSound();
+
+bool loadIntro();
+void displayIntro();
+
+bool initSDLtexture();
+
 void gfxUpdate();
+
 void close();  // Free resources and close SDL
 
 // Original Chip-8's resolution
@@ -20,82 +30,157 @@ void close();  // Free resources and close SDL
 
 // Global SDL variables
 SDL_Window* window = NULL;
+SDL_Texture* intro = NULL;
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
 
-// Global SDL_audio variables
+// Global SDL_image vars
+uint8_t alpha = 255;
+#define DELAY 300  // 1000 milliseconds is 1 second
+
+// Global SDL_audio vars
 SDL_AudioStream* stream = NULL;
 Uint8* audio_buf = NULL;
 Uint32 audio_len = 0;
 
-#define DELAY 1  // For delay of each gfx update frame
-
 Chip8 chip8;
+
+// Set up callback used by file dialog functions
+static const SDL_DialogFileFilter filters[] = 
+{
+	{ "CH8 files", "ch8" }
+};
+
+static void SDLCALL callback(void* userdata, const char* const* filelist, int filter)
+{
+	if (!filelist) {
+		SDL_Log("An error occured: %s", SDL_GetError());
+		return;
+	}
+	else if (!*filelist) {
+		SDL_Log("The user did not select any file.");
+		SDL_Log("Most likely, the dialog was canceled.");
+		return;
+	}
+
+	while (*filelist) {
+		SDL_Log("Full path to selected file: '%s'", *filelist);
+		filelist++;
+		return;
+	}
+}
 
 int main(int argc, char* argv[])
 {
-	if (!openROM(argc, argv))
-	{
-		printf("Failed to open ROM\n");
-		return 1;
-	}
-
 	if (!initSDL())
 	{
 		printf("Failed to initialize\n");
+		return 1;
+	}
+
+	if (!loadIntro())
+	{
+		printf("Failed to load intro\n");
 		return 2;
 	}
 
-	// Emulation loop
+	// displayIntro();
+
+	if (!initSDLtexture())
+	{
+		printf("Failed to load texture\n");
+		return 3;
+	}
+
+	if (!openROM(argc, argv))
+	{
+		printf("Failed to open ROM\n");
+		return 4;
+	}
+
+	// Application is running
 	while (true)
 	{
-		// Process the event queue once every frame before updating the game's state
 		bool quit = false;
+		bool back = false;
+		bool playGame = false;
+		bool emulationStart = false;
+		bool emulationInProgress = false;
+
+		// Process the event queue once every frame before updating the game's state
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_EVENT_QUIT) {
 				quit = true;
 			}
-		}
 
-		if (quit)
-		{
-			break;
-		}
+			// TO-DO: set up a menu (CHIP-8 Emulator Load file with L (New image if the file is loaded into the memory,
+			// same (another file can be reloaded) plus) Play game with G (starts an emulation loop) )
 
-		// Emulate one cycle
-		chip8.emulateCycle();
-
-		// Update the screen if the draw_flag is true
-		if (chip8.draw_flag) {
-			gfxUpdate();
-		}
-
-		if (chip8.sound_flag) {
-			// Check if the audio stream needs more data
-			if (SDL_GetAudioStreamQueued(stream) < static_cast<int>(audio_len))
+			if ( (event.type == SDL_EVENT_KEY_DOWN && !emulationInProgress) || back)
 			{
-				// Add data to the audio stream
-				SDL_PutAudioStreamData(stream, audio_buf, audio_len);
+				if (event.key.scancode == SDL_SCANCODE_L)
+				{
+					// Displays a dialog that lets the user select a file on their filesystem
+					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);
+					SDL_PumpEvents();
+					// TO-DO: Load ROM into chip8 memory (in callback?) and display a new image Play game with G
+
+					playGame = true;
+				}
 			}
 
-			// SDL_OpenAudioDeviceStream starts the device paused. Start playback of the audio device associated with the stream
-			if (!SDL_ResumeAudioStreamDevice(stream))
+			if (event.type == SDL_EVENT_KEY_DOWN && !emulationInProgress)
 			{
-				printf("Couldn't resume audio device: %s\n", SDL_GetError());
-				SDL_QuitSubSystem(SDL_INIT_AUDIO);
+				if (event.key.scancode == SDL_SCANCODE_G)
+				{
+					emulationStart = true;
+				}
 			}
 
-			// Pause audio playback 
-			if (!SDL_PauseAudioStreamDevice(stream))
+			if (event.type == SDL_EVENT_KEY_DOWN && emulationInProgress)
 			{
-				printf("Couldn't pause audio device: %s\n", SDL_GetError());
-				SDL_QuitSubSystem(SDL_INIT_AUDIO);
+				if (event.key.scancode == SDL_SCANCODE_ESCAPE)
+				{
+					back = true;  // Come back from emulation loop to the menu 
+				}
+			}
+
+			// Emulation loop
+			if (emulationStart)
+			{
+				while (true)
+				{
+					emulationInProgress = true;
+
+					if (quit) { break; }  // Stop emulation loop; stop application loop afterwards
+
+					if (back)
+					{
+						emulationStart = false;
+						emulationInProgress = false;
+						break;  // Come back to the menu 
+					}
+
+					// Emulate one cycle
+					chip8.emulateCycle();
+
+					// Update the screen if the draw_flag is true
+					if (chip8.draw_flag) {
+						gfxUpdate();
+					}
+
+					if (chip8.sound_flag) {
+						playSound();
+					}
+
+					SDL_PumpEvents();  // Update the event queue and internal input device state
+				}
 			}
 		}
 
-		SDL_PumpEvents();  // Update the event queue and internal input device state
+		if (quit) { break; }  // Close the aplication
 	}
 
 	close();
@@ -105,9 +190,8 @@ int main(int argc, char* argv[])
 
 bool openROM(int argc, char* argv[])
 {
-	bool success = true;
-
-	if (argc != 2) {
+	if (argc != 2) 
+	{
 		printf("%s%s%s\n", "Usage: ", argv[0], " filename");
 		return false;
 	}
@@ -118,10 +202,11 @@ bool openROM(int argc, char* argv[])
 	// Read the program (argv) in binary mode, parse to buffer
 	char* filename = argv[1];
 	printf("%s\n", filename);
-	std::ifstream file(argv[1], std::ios_base::binary);
+	std::ifstream file(filename, std::ios_base::binary);
 
-	if (!file.is_open()) {
-		printf("Couldn't open game file");
+	if (!file.is_open()) 
+	{
+		printf("Couldn't open file %s", filename);
 		return false;
 	}
 
@@ -137,6 +222,40 @@ bool openROM(int argc, char* argv[])
 	chip8.loadROM(file_size, buffer);
 
 	return true;
+}
+
+bool initSDL()
+{
+	bool success = true;
+
+	// Initialize SDL
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == false)
+	{
+		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
+		success = false;
+	}
+
+	if (!loadSound()) { success = false; }
+
+	// Create SDL window
+	window = SDL_CreateWindow("Rin's Chip-8 Emulator", WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
+	if (!window)
+	{
+		printf("Couldn't create a window: %s\n", SDL_GetError());
+		SDL_Quit();  // Clean up SDL
+		success = false;
+	}
+
+	// Create SDL renderer
+	renderer = SDL_CreateRenderer(window, NULL);
+	if (!renderer)
+	{
+		printf("Couldn't create a renderer: %s\n", SDL_GetError());
+		SDL_Quit();
+		success = false;
+	}
+
+	return success;
 }
 
 bool loadSound()
@@ -165,36 +284,87 @@ bool loadSound()
 	return success;
 }
 
-bool initSDL()
+void playSound()
+{
+	// Check if the audio stream needs more data
+	if (SDL_GetAudioStreamQueued(stream) < static_cast<int>(audio_len))
+	{
+		// Add data to the audio stream
+		SDL_PutAudioStreamData(stream, audio_buf, audio_len);
+	}
+
+	// SDL_OpenAudioDeviceStream starts the device paused. Start playback of the audio device associated with the stream
+	if (!SDL_ResumeAudioStreamDevice(stream))
+	{
+		printf("Couldn't resume audio device: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	}
+
+	// Pause audio playback 
+	if (!SDL_PauseAudioStreamDevice(stream))
+	{
+		printf("Couldn't pause audio device: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	}
+}
+
+bool loadIntro()
+{
+	// Load an image into a texture
+	intro = IMG_LoadTexture(renderer, "intro.jpg");
+	if (intro == NULL)
+	{
+		printf("Couldn't load an intro: %s\n", SDL_GetError());
+		SDL_Quit();
+		return false;
+	}
+
+	if (!SDL_SetTextureAlphaMod(intro, alpha))
+	{
+		printf("Couldn't set an alpha value to intro: %s\n", SDL_GetError());
+		SDL_Quit();
+		return false;
+	}
+
+	if (!SDL_SetTextureBlendMode(intro, SDL_BLENDMODE_BLEND))
+	{
+		printf("Couldn't set blend mode to intro: %s\n", SDL_GetError());
+		SDL_Quit();
+		return false;
+	}
+
+	return true;
+}
+
+void displayIntro()
+{
+	unsigned int currentTime = 0;
+
+	while (true)
+	{
+		SDL_RenderClear(renderer);
+
+		SDL_SetTextureAlphaMod(intro, alpha);
+		SDL_RenderTexture(renderer, intro, NULL, NULL);
+
+		SDL_RenderPresent(renderer);
+
+		if (alpha == 255) { SDL_Delay(DELAY); }
+
+		alpha -= 20;
+
+		SDL_Delay(DELAY);
+
+		if (alpha == 0) { break; }
+	}
+
+	SDL_DestroyTexture(intro);
+	intro = NULL;
+}
+
+bool initSDLtexture()
 {
 	bool success = true;
-
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == false)
-	{
-		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
-		success = false;
-	}
-
-	loadSound();
-
-	// Create SDL window
-	window = SDL_CreateWindow("Rin's Chip-8 Emu", WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
-	if (!window)
-	{
-		printf("Couldn't create a window: %s\n", SDL_GetError());
-		SDL_Quit();  // Clean up SDL
-		success = false;
-	}
-
-	// Create SDL renderer
-	renderer = SDL_CreateRenderer(window, NULL);
-	if (!renderer)
-	{
-		printf("Couldn't create a renderer: %s\n", SDL_GetError());
-		SDL_Quit();
-		success = false;
-	}
 
 	// Create SDL texture: texture will be updated with contents of surface and then rendered to the screen
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -244,19 +414,17 @@ void gfxUpdate()
 
 	// Present the renderer on the screen
 	SDL_RenderPresent(renderer);
-
-	SDL_Delay(DELAY);
 }
 
 void close()
 {
-	// Destroy SDL variables 
-	SDL_DestroyWindow(window);
-	window = NULL;
-	SDL_DestroyRenderer(renderer);
-	renderer = NULL;
+	// Destroy SDL variables
 	SDL_DestroyTexture(texture);
 	texture = NULL;
+	SDL_DestroyRenderer(renderer);
+	renderer = NULL; 
+	SDL_DestroyWindow(window);
+	window = NULL;
 
 	// Destroy SDL_audio variables
 	audio_buf = NULL;
