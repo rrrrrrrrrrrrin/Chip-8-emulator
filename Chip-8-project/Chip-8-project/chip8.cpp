@@ -50,10 +50,10 @@ void Chip8::update_timers() {
 	}
 }
 
-void Chip8::loadROM(int file_size, std::vector<char> buffer)
+void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 {
-	for (int i = 0; i < file_size; i++) {
-		memory[i + 512] = buffer[i];  // Start filling the memory at location 0x200
+	for (size_t i = 0; i < SDL_file_size; i++) {
+		memory[i + 512] = SDL_buffer[i];  // Start filling the memory at location 0x200
 	}
 }
 

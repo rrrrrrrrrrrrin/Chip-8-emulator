@@ -71,7 +71,7 @@ public:
 	void clear_display();
 	void initialize();
 
-	void loadROM(int file_size, std::vector<char> buffer);
+	void loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer);
 
 	bool draw_flag = false;
 	void draw(unsigned int X, unsigned int Y, char N);

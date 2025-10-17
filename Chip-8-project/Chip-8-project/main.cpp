@@ -5,11 +5,14 @@
 #include <SDL_image.h>
 
 bool openROM(int argc, char* argv[]);  // Read file into the buffer
+bool openROMSDL();
 
 bool initSDL();  // Start SDL (video, audio)
 
 bool loadSound();
 void playSound();
+
+void updateRenderer(SDL_Texture* new_texture);
 
 bool loadIntro();
 void displayIntro();
@@ -35,8 +38,8 @@ SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
 
 // Global SDL_image vars
-uint8_t alpha = 255;
-#define DELAY 300  // 1000 milliseconds is 1 second
+int alpha = 255;
+#define DELAY 200  // 1000 milliseconds is 1 second
 
 // Global SDL_audio vars
 SDL_AudioStream* stream = NULL;
@@ -44,6 +47,9 @@ Uint8* audio_buf = NULL;
 Uint32 audio_len = 0;
 
 Chip8 chip8;
+
+// SDL_dialog vars and functions in the global space
+SDL_IOStream* SDL_file;
 
 // Set up callback used by file dialog functions
 static const SDL_DialogFileFilter filters[] = 
@@ -65,9 +71,47 @@ static void SDLCALL callback(void* userdata, const char* const* filelist, int fi
 
 	while (*filelist) {
 		SDL_Log("Full path to selected file: '%s'", *filelist);
+
+		SDL_file = SDL_IOFromFile(*filelist, "rb");  // Open ROM for reading in binary mode
+		if (SDL_file == NULL)
+		{
+			printf("Couldn't open SDL file %s%s\n", *filelist, SDL_GetError());
+		}
+
 		filelist++;
 		return;
 	}
+}
+
+bool openROMSDL()
+{
+	// Initialize the Chip8 system and load the game into the memory
+	chip8.initialize();
+
+	// Parse ROM to buffer
+	SDL_SeekIO(SDL_file, 0, SDL_IO_SEEK_END);
+	size_t SDL_file_size = static_cast<size_t>(SDL_TellIO(SDL_file));
+	SDL_SeekIO(SDL_file, 0, SDL_IO_SEEK_SET);
+
+	std::vector<char> SDL_buffer(SDL_file_size);
+	size_t SDL_read = SDL_ReadIO(SDL_file, SDL_buffer.data(), SDL_file_size);  // .data() for std::vector returns a pointer to memory array used by vector
+
+	if (SDL_GetIOStatus(SDL_file) != SDL_IO_STATUS_EOF)
+	{
+		printf("The SDL_file data stream is completely read if zero: %Iu", SDL_read);  // Iu is for size_t
+		printf("Couldn't read data into SDL_buffer %s\n", SDL_GetError());
+		return false;
+	}
+
+	if (!SDL_CloseIO(SDL_file))
+	{
+		printf("Couldn't read the file %s\n", SDL_GetError());
+		return false;
+	}
+
+	chip8.loadROM(SDL_file_size, SDL_buffer);
+
+	return true;
 }
 
 int main(int argc, char* argv[])
@@ -84,7 +128,7 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	// displayIntro();
+	displayIntro();
 
 	if (!initSDLtexture())
 	{
@@ -92,22 +136,17 @@ int main(int argc, char* argv[])
 		return 3;
 	}
 
-	if (!openROM(argc, argv))
-	{
-		printf("Failed to open ROM\n");
-		return 4;
-	}
+	bool quit = false;
+	bool back = false;
+	bool playGame = false;
+	bool emulationStart = false;
 
 	// Application is running
 	while (true)
 	{
+		// Process the event queue once every frame BEFORE updating the game's state
+		// (while SDL_PollEvent loop closes before the emulation of the cycle and the bool values can be checked outside of the event loop)
 		bool quit = false;
-		bool back = false;
-		bool playGame = false;
-		bool emulationStart = false;
-		bool emulationInProgress = false;
-
-		// Process the event queue once every frame before updating the game's state
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
@@ -117,70 +156,71 @@ int main(int argc, char* argv[])
 
 			// TO-DO: set up a menu (CHIP-8 Emulator Load file with L (New image if the file is loaded into the memory,
 			// same (another file can be reloaded) plus) Play game with G (starts an emulation loop) )
-
-			if ( (event.type == SDL_EVENT_KEY_DOWN && !emulationInProgress) || back)
+			if ((event.type == SDL_EVENT_KEY_DOWN) || back)
 			{
 				if (event.key.scancode == SDL_SCANCODE_L)
 				{
 					// Displays a dialog that lets the user select a file on their filesystem
 					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);
-					SDL_PumpEvents();
+
 					// TO-DO: Load ROM into chip8 memory (in callback?) and display a new image Play game with G
 
+					/*if (!openROM(argc, argv))
+					{
+						printf("Failed to open ROM\n");
+						return 4;
+					}*/
+
 					playGame = true;
+					back = false;
 				}
 			}
 
-			if (event.type == SDL_EVENT_KEY_DOWN && !emulationInProgress)
+			if (event.type == SDL_EVENT_KEY_DOWN && playGame)
 			{
 				if (event.key.scancode == SDL_SCANCODE_G)
 				{
+					openROMSDL();
+
 					emulationStart = true;
+					playGame = false;
 				}
 			}
 
-			if (event.type == SDL_EVENT_KEY_DOWN && emulationInProgress)
+			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
 				if (event.key.scancode == SDL_SCANCODE_ESCAPE)
 				{
-					back = true;  // Come back from emulation loop to the menu 
-				}
-			}
-
-			// Emulation loop
-			if (emulationStart)
-			{
-				while (true)
-				{
-					emulationInProgress = true;
-
-					if (quit) { break; }  // Stop emulation loop; stop application loop afterwards
-
-					if (back)
-					{
-						emulationStart = false;
-						emulationInProgress = false;
-						break;  // Come back to the menu 
-					}
-
-					// Emulate one cycle
-					chip8.emulateCycle();
-
-					// Update the screen if the draw_flag is true
-					if (chip8.draw_flag) {
-						gfxUpdate();
-					}
-
-					if (chip8.sound_flag) {
-						playSound();
-					}
-
-					SDL_PumpEvents();  // Update the event queue and internal input device state
+					back = true; 
 				}
 			}
 		}
 
-		if (quit) { break; }  // Close the aplication
+		if (quit) { break; }  // Stop application loop
+
+		// Stop emulation by initializing chip8 object and return to the menu 
+		if (back)
+		{
+			emulationStart = false;
+			chip8.initialize();
+		}
+
+		if (emulationStart)
+		{
+			// Emulate one cycle
+			chip8.emulateCycle();
+
+			// Update the screen if the draw_flag is true
+			if (chip8.draw_flag) {
+				gfxUpdate();
+			}
+
+			if (chip8.sound_flag) {
+				playSound();
+			}
+
+			SDL_PumpEvents();  // Update the event queue and internal input device state
+		}
 	}
 
 	close();
@@ -308,6 +348,13 @@ void playSound()
 	}
 }
 
+void updateRenderer(SDL_Texture* new_texture)
+{
+	SDL_RenderClear(renderer);
+	SDL_RenderTexture(renderer, new_texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+}
+
 bool loadIntro()
 {
 	// Load an image into a texture
@@ -319,7 +366,7 @@ bool loadIntro()
 		return false;
 	}
 
-	if (!SDL_SetTextureAlphaMod(intro, alpha))
+	if (!SDL_SetTextureAlphaMod(intro, static_cast<Uint8>(alpha)))
 	{
 		printf("Couldn't set an alpha value to intro: %s\n", SDL_GetError());
 		SDL_Quit();
@@ -338,24 +385,20 @@ bool loadIntro()
 
 void displayIntro()
 {
-	unsigned int currentTime = 0;
-
 	while (true)
 	{
-		SDL_RenderClear(renderer);
+		SDL_SetTextureAlphaMod(intro, static_cast<int>(alpha));
 
-		SDL_SetTextureAlphaMod(intro, alpha);
-		SDL_RenderTexture(renderer, intro, NULL, NULL);
-
-		SDL_RenderPresent(renderer);
+		// Update renderer with a new texture
+		updateRenderer(intro);
 
 		if (alpha == 255) { SDL_Delay(DELAY); }
 
-		alpha -= 20;
+		alpha -= 17;
 
 		SDL_Delay(DELAY);
 
-		if (alpha == 0) { break; }
+		if (alpha <= 0) { break; }
 	}
 
 	SDL_DestroyTexture(intro);
@@ -382,6 +425,9 @@ bool initSDLtexture()
 		SDL_Quit();
 		success = false;
 	}
+
+	// Update renderer with a new texture
+	updateRenderer(texture);
 
 	return success;
 }
