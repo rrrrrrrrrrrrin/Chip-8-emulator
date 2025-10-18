@@ -50,7 +50,7 @@ Chip8 chip8;
 
 // SDL_dialog vars and functions in the global space
 SDL_IOStream* SDL_file;
-
+bool openedDialog = false;
 // Set up callback used by file dialog functions
 static const SDL_DialogFileFilter filters[] = 
 {
@@ -61,11 +61,13 @@ static void SDLCALL callback(void* userdata, const char* const* filelist, int fi
 {
 	if (!filelist) {
 		SDL_Log("An error occured: %s", SDL_GetError());
+		openedDialog = false;
 		return;
 	}
 	else if (!*filelist) {
 		SDL_Log("The user did not select any file.");
 		SDL_Log("Most likely, the dialog was canceled.");
+		openedDialog = false;
 		return;
 	}
 
@@ -79,6 +81,8 @@ static void SDLCALL callback(void* userdata, const char* const* filelist, int fi
 		}
 
 		filelist++;
+
+		openedDialog = false;
 		return;
 	}
 }
@@ -144,6 +148,11 @@ int main(int argc, char* argv[])
 	// Application is running
 	while (true)
 	{
+		if (back)
+		{
+			// Menu
+		}
+
 		// Process the event queue once every frame BEFORE updating the game's state
 		// (while SDL_PollEvent loop closes before the emulation of the cycle and the bool values can be checked outside of the event loop)
 		bool quit = false;
@@ -156,14 +165,23 @@ int main(int argc, char* argv[])
 
 			// TO-DO: set up a menu (CHIP-8 Emulator Load file with L (New image if the file is loaded into the memory,
 			// same (another file can be reloaded) plus) Play game with G (starts an emulation loop) )
-			if ((event.type == SDL_EVENT_KEY_DOWN) || back)
+			if ((event.type == SDL_EVENT_KEY_DOWN))
 			{
-				if (event.key.scancode == SDL_SCANCODE_L)
+				if (!openedDialog && event.key.scancode == SDL_SCANCODE_L && !emulationStart)
 				{
+					openedDialog = true;  // Don't let the user open another dialog until they close the current one
+					
 					// Displays a dialog that lets the user select a file on their filesystem
-					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);
+					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);  // => openedDialog = false;
+					
+					playGame = true;
 
-					// TO-DO: Load ROM into chip8 memory (in callback?) and display a new image Play game with G
+					// TO-DO: Load ROM into chip8 memory (in callback?) and display a new image menu Play game with G
+
+				}
+
+				if (event.key.scancode == SDL_SCANCODE_G && playGame)
+				{
 
 					/*if (!openROM(argc, argv))
 					{
@@ -171,19 +189,11 @@ int main(int argc, char* argv[])
 						return 4;
 					}*/
 
-					playGame = true;
-					back = false;
-				}
-			}
-
-			if (event.type == SDL_EVENT_KEY_DOWN && playGame)
-			{
-				if (event.key.scancode == SDL_SCANCODE_G)
-				{
 					openROMSDL();
 
 					emulationStart = true;
 					playGame = false;
+					back = false;
 				}
 			}
 
@@ -219,7 +229,7 @@ int main(int argc, char* argv[])
 				playSound();
 			}
 
-			SDL_PumpEvents();  // Update the event queue and internal input device state
+			// SDL_PumpEvents();  // Update the event queue and internal input device state
 		}
 	}
 
@@ -340,12 +350,12 @@ void playSound()
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	}
 
-	// Pause audio playback 
-	if (!SDL_PauseAudioStreamDevice(stream))
-	{
-		printf("Couldn't pause audio device: %s\n", SDL_GetError());
-		SDL_QuitSubSystem(SDL_INIT_AUDIO);
-	}
+	//// Pause audio playback 
+	//if (!SDL_PauseAudioStreamDevice(stream))
+	//{
+	//	printf("Couldn't pause audio device: %s\n", SDL_GetError());
+	//	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	//}
 }
 
 void updateRenderer(SDL_Texture* new_texture)
