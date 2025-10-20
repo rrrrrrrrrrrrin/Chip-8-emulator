@@ -100,9 +100,9 @@ bool openROMSDL()
 	std::vector<char> SDL_buffer(SDL_file_size);
 	size_t SDL_read = SDL_ReadIO(SDL_file, SDL_buffer.data(), SDL_file_size);  // .data() for std::vector returns a pointer to memory array used by vector
 
-	if (SDL_GetIOStatus(SDL_file) != SDL_IO_STATUS_EOF)
+	// No bytes are read
+	if (SDL_read == 0 && SDL_GetIOStatus(SDL_file) != SDL_IO_STATUS_EOF)
 	{
-		printf("The SDL_file data stream is completely read if zero: %Iu", SDL_read);  // Iu is for size_t
 		printf("Couldn't read data into SDL_buffer %s\n", SDL_GetError());
 		return false;
 	}
@@ -113,6 +113,7 @@ bool openROMSDL()
 		return false;
 	}
 
+	printf("The SDL_file data stream is completely read: %Iu bytes\n", SDL_read);  // Iu is for size_t
 	chip8.loadROM(SDL_file_size, SDL_buffer);
 
 	return true;
@@ -350,12 +351,12 @@ void playSound()
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	}
 
-	//// Pause audio playback 
-	//if (!SDL_PauseAudioStreamDevice(stream))
-	//{
-	//	printf("Couldn't pause audio device: %s\n", SDL_GetError());
-	//	SDL_QuitSubSystem(SDL_INIT_AUDIO);
-	//}
+	// Pause audio playback 
+	if (!SDL_PauseAudioStreamDevice(stream))
+	{
+		printf("Couldn't pause audio device: %s\n", SDL_GetError());
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	}
 }
 
 void updateRenderer(SDL_Texture* new_texture)
