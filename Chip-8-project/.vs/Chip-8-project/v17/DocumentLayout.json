@@ -7,15 +7,19 @@
       "RelativeMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|solutionrelative:Chip-8-project\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\include\\vector||{3B902123-F8A7-4915-9F01-361F908088D0}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\sound_chip8.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|solutionrelative:Chip-8-project\\sound_chip8.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|solutionrelative:Chip-8-project\\chip8.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{9A0C47D4-C731-4286-8C77-C29EFFED2DCE}|Chip-8-project\\Chip-8-project.vcxproj|solutionrelative:Chip-8-project\\chip8.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\vector||{3B902123-F8A7-4915-9F01-361F908088D0}|"
     }
   ],
   "DocumentGroupContainers": [
@@ -25,7 +29,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -49,15 +53,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "vector",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\vector",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\vector",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\vector",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.42.34433\\include\\vector",
-              "ViewState": "AgIAAE0IAAAAAAAAAAArwFwIAAAAAAAAAAAAAA==",
+              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\include\\vector",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\include\\vector",
+              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\include\\vector",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\include\\vector",
+              "ViewState": "AgIAAHwIAAAAAAAAAAArwIcIAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-10-17T19:36:43.283Z"
+              "WhenOpened": "2025-10-20T21:36:36.17Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "sound_chip8.h",
+              "DocumentMoniker": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\sound_chip8.h",
+              "RelativeDocumentMoniker": "Chip-8-project\\sound_chip8.h",
+              "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\sound_chip8.h",
+              "RelativeToolTip": "Chip-8-project\\sound_chip8.h",
+              "ViewState": "AgIAABUAAAAAAAAAAAAUwCMAAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-10-20T20:22:30.162Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -67,33 +85,33 @@
               "RelativeDocumentMoniker": "Chip-8-project\\main.cpp",
               "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\main.cpp",
               "RelativeToolTip": "Chip-8-project\\main.cpp",
-              "ViewState": "AgIAACkBAAAAAAAAAAAAADIBAAACAAAAAAAAAA==",
+              "ViewState": "AgIAALUAAAAAAAAAAAAcwMYAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-14T10:56:22.287Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "chip8.cpp",
               "DocumentMoniker": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.cpp",
               "RelativeDocumentMoniker": "Chip-8-project\\chip8.cpp",
               "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.cpp",
               "RelativeToolTip": "Chip-8-project\\chip8.cpp",
-              "ViewState": "AgIAACoAAAAAAAAAAAArwFYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAJIBAAAAAAAAAAAUwHABAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-14T10:05:15.596Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "chip8.h",
               "DocumentMoniker": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.h",
               "RelativeDocumentMoniker": "Chip-8-project\\chip8.h",
               "ToolTip": "C:\\Users\\0berd\\Desktop\\Chip-8-emulator\\Chip-8-project\\Chip-8-project\\chip8.h",
               "RelativeToolTip": "Chip-8-project\\chip8.h",
-              "ViewState": "AgIAADMAAAAAAAAAAAAAAEIAAAA1AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-09-14T10:05:08.075Z",
               "EditorCaption": ""

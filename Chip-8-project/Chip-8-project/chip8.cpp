@@ -1,4 +1,5 @@
 #include "chip8.h"
+#include "sound_chip8.h"
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
 
@@ -37,7 +38,8 @@ void Chip8::initialize()
 
 	// Reset flags
 	draw_flag = false;
-	sound_flag = false;
+
+	loadSound8();
 }
 
 void Chip8::update_timers() {
@@ -57,6 +59,7 @@ void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 	}
 }
 
+// Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
 void Chip8::draw(unsigned int X, unsigned int Y, char N)
 {
 	// for the sprites to wrap: VX % 64 (display - 64x32) or VX & 63
@@ -382,7 +385,9 @@ void Chip8::emulateCycle() {
 
 void Chip8::setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key)
 {
-	sound_flag = true;
+	int i = 10;
+	playSound8();
+	pauseSound8();
 	V[X] = key;
 	pc += 2;
 }

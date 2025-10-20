@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="chip8.h" />
+    <ClInclude Include="sound_chip8.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="chip8.cpp" />

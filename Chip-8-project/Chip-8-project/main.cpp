@@ -1,21 +1,28 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 #include <fstream>
-#include <SDL_audio.h>
 #include <SDL_image.h>
 
-bool openROM(int argc, char* argv[]);  // Read file into the buffer
-bool openROMSDL();
+bool openROMSDL();  // Read file into the buffer and load it into chip8's memory
 
 bool initSDL();  // Start SDL (video, audio)
 
 bool loadSound();
 void playSound();
+void pauseSound();
 
 void updateRenderer(SDL_Texture* new_texture);
 
 bool loadIntro();
 void displayIntro();
+
+bool loadMenuFile();
+void displayMenuFile();
+
+bool loadMenuPlay();
+void displayMenuPlay();
+
+void destroyMenuTextures();
 
 bool initSDLtexture();
 
@@ -33,9 +40,12 @@ void close();  // Free resources and close SDL
 
 // Global SDL variables
 SDL_Window* window = NULL;
-SDL_Texture* intro = NULL;
 SDL_Texture* texture = NULL;
 SDL_Renderer* renderer = NULL;
+
+SDL_Texture* intro = NULL;
+SDL_Texture* menu_file = NULL;
+SDL_Texture* menu_play = NULL;
 
 // Global SDL_image vars
 int alpha = 255;
@@ -51,6 +61,7 @@ Chip8 chip8;
 // SDL_dialog vars and functions in the global space
 SDL_IOStream* SDL_file;
 bool openedDialog = false;
+
 // Set up callback used by file dialog functions
 static const SDL_DialogFileFilter filters[] = 
 {
@@ -119,7 +130,7 @@ bool openROMSDL()
 	return true;
 }
 
-int main(int argc, char* argv[])
+int main()
 {
 	if (!initSDL())
 	{
@@ -142,16 +153,17 @@ int main(int argc, char* argv[])
 	}
 
 	bool quit = false;
-	bool back = false;
+	bool menuFile = true;
 	bool playGame = false;
 	bool emulationStart = false;
 
 	// Application is running
 	while (true)
 	{
-		if (back)
+		if (menuFile)
 		{
-			// Menu
+			loadMenuFile();
+			displayMenuFile();
 		}
 
 		// Process the event queue once every frame BEFORE updating the game's state
@@ -171,46 +183,47 @@ int main(int argc, char* argv[])
 				if (!openedDialog && event.key.scancode == SDL_SCANCODE_L && !emulationStart)
 				{
 					openedDialog = true;  // Don't let the user open another dialog until they close the current one
-					
+
 					// Displays a dialog that lets the user select a file on their filesystem
 					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);  // => openedDialog = false;
-					
+
+					// TO-DO: If file was read and loaded successfully, open menu play
+
+					menuFile = false;
+
+					// TO-DO: display a new image menu Play game with G
+					loadMenuPlay();
+					displayMenuPlay();
+
 					playGame = true;
-
-					// TO-DO: Load ROM into chip8 memory (in callback?) and display a new image menu Play game with G
-
 				}
 
 				if (event.key.scancode == SDL_SCANCODE_G && playGame)
 				{
-
-					/*if (!openROM(argc, argv))
-					{
-						printf("Failed to open ROM\n");
-						return 4;
-					}*/
-
 					openROMSDL();
 
-					emulationStart = true;
 					playGame = false;
-					back = false;
+
+					destroyMenuTextures();
+
+					emulationStart = true;
 				}
 			}
+
 
 			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
 				if (event.key.scancode == SDL_SCANCODE_ESCAPE)
 				{
-					back = true; 
+					menuFile = true; 
 				}
 			}
 		}
 
 		if (quit) { break; }  // Stop application loop
 
-		// Stop emulation by initializing chip8 object and return to the menu 
-		if (back)
+		// Stop emulation by initializing chip8 object and return to the menu (file)
+		if (menuFile)
 		{
 			emulationStart = false;
 			chip8.initialize();
@@ -225,54 +238,12 @@ int main(int argc, char* argv[])
 			if (chip8.draw_flag) {
 				gfxUpdate();
 			}
-
-			if (chip8.sound_flag) {
-				playSound();
-			}
-
-			// SDL_PumpEvents();  // Update the event queue and internal input device state
 		}
 	}
 
 	close();
 
 	return 0;
-}
-
-bool openROM(int argc, char* argv[])
-{
-	if (argc != 2) 
-	{
-		printf("%s%s%s\n", "Usage: ", argv[0], " filename");
-		return false;
-	}
-
-	// Initialize the Chip8 system and load the game into the memory
-	chip8.initialize();
-
-	// Read the program (argv) in binary mode, parse to buffer
-	char* filename = argv[1];
-	printf("%s\n", filename);
-	std::ifstream file(filename, std::ios_base::binary);
-
-	if (!file.is_open()) 
-	{
-		printf("Couldn't open file %s", filename);
-		return false;
-	}
-
-	file.seekg(0, std::ios::end);
-	int file_size = static_cast<int>(file.tellg());
-	file.seekg(0, std::ios::beg);
-
-	std::vector<char> buffer(file_size);
-	file.read(buffer.data(), file_size);
-
-	file.close();
-
-	chip8.loadROM(file_size, buffer);
-
-	return true;
 }
 
 bool initSDL()
@@ -316,7 +287,7 @@ bool loadSound()
 	SDL_AudioSpec spec;
 
 	// Load the .wav file
-	if (!SDL_LoadWAV("sound.wav", &spec, &audio_buf, &audio_len))
+	if (!SDL_LoadWAV("intro.wav", &spec, &audio_buf, &audio_len))
 	{
 		printf("Couldn't load .wav file: %s\n", SDL_GetError());
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
@@ -350,7 +321,10 @@ void playSound()
 		printf("Couldn't resume audio device: %s\n", SDL_GetError());
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	}
+}
 
+void pauseSound()
+{
 	// Pause audio playback 
 	if (!SDL_PauseAudioStreamDevice(stream))
 	{
@@ -398,6 +372,8 @@ void displayIntro()
 {
 	while (true)
 	{
+		playSound();
+
 		SDL_SetTextureAlphaMod(intro, static_cast<int>(alpha));
 
 		// Update renderer with a new texture
@@ -409,11 +385,64 @@ void displayIntro()
 
 		SDL_Delay(DELAY);
 
-		if (alpha <= 0) { break; }
+		if (alpha <= 0) 
+		{
+			pauseSound();
+			break;
+		}
 	}
 
 	SDL_DestroyTexture(intro);
 	intro = NULL;
+}
+
+bool loadMenuFile()
+{
+	// Load an image into a texture
+	menu_file = IMG_LoadTexture(renderer, "intro.jpg");
+	if (menu_file == NULL)
+	{
+		printf("Couldn't load a menu_file: %s\n", SDL_GetError());
+		SDL_Quit();
+		return false;
+	}
+
+	return true;
+}
+
+void displayMenuFile()
+{
+	// Update renderer with a new texture
+	updateRenderer(menu_file);
+}
+
+bool loadMenuPlay()
+{
+	SDL_DestroyTexture(menu_file);
+	menu_file = NULL;
+
+	// Load an image into a texture
+	menu_play = IMG_LoadTexture(renderer, "menu_play.jpg");
+	if (menu_play == NULL)
+	{
+		printf("Couldn't load a menu_play: %s\n", SDL_GetError());
+		SDL_Quit();
+		return false;
+	}
+
+	return true;
+}
+
+void displayMenuPlay()
+{
+	// Update renderer with a new texture
+	updateRenderer(menu_play);
+}
+
+void destroyMenuTextures()
+{
+	SDL_DestroyTexture(menu_play);
+	menu_play = NULL;
 }
 
 bool initSDLtexture()
@@ -442,6 +471,7 @@ bool initSDLtexture()
 
 	return success;
 }
+
 
 void gfxUpdate()
 {

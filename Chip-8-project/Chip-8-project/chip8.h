@@ -79,6 +79,5 @@ public:
 	void decodeOpcodes();
 	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
-	bool sound_flag = false;
 	void update_timers();
 };
