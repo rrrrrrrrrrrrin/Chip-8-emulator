@@ -6,13 +6,17 @@
 bool openROMSDL();  // Read file into the buffer and load it into chip8's memory
 
 bool initSDL();  // Start SDL (video, audio)
+void close();  // Free resources and close SDL
 
+// Manage intro sound
 bool loadSound();
 void playSound();
 void pauseSound();
 
+// Update renderer with a new texture
 void updateRenderer(SDL_Texture* new_texture);
 
+// Functions to show intro and menus in application loop
 bool loadIntro();
 void displayIntro();
 
@@ -24,11 +28,14 @@ void displayMenuPlay();
 
 void destroyMenuTextures();
 
+// Variables for application loop 
+bool menuFile = true;
+bool playGame = false;
+void showMenuPlay();
+
+// Functions to update the screen during emulation
 bool initSDLtexture();
-
 void gfxUpdate();
-
-void close();  // Free resources and close SDL
 
 // Original Chip-8's resolution
 #define SCREEN_WIDTH 64
@@ -49,7 +56,7 @@ SDL_Texture* menu_play = NULL;
 
 // Global SDL_image vars
 int alpha = 255;
-#define DELAY 200  // 1000 milliseconds is 1 second
+#define DELAY 250  // 1000 milliseconds is 1 second
 
 // Global SDL_audio vars
 SDL_AudioStream* stream = NULL;
@@ -61,6 +68,17 @@ Chip8 chip8;
 // SDL_dialog vars and functions in the global space
 SDL_IOStream* SDL_file;
 bool openedDialog = false;
+
+void showMenuPlay()
+{
+	menuFile = false;
+
+	// Show menu play
+	loadMenuPlay();
+	displayMenuPlay();
+
+	playGame = true;
+}
 
 // Set up callback used by file dialog functions
 static const SDL_DialogFileFilter filters[] = 
@@ -94,6 +112,10 @@ static void SDLCALL callback(void* userdata, const char* const* filelist, int fi
 		filelist++;
 
 		openedDialog = false;
+
+		// If file was read and loaded successfully, open menu play
+		showMenuPlay();
+
 		return;
 	}
 }
@@ -153,13 +175,12 @@ int main()
 	}
 
 	bool quit = false;
-	bool menuFile = true;
-	bool playGame = false;
 	bool emulationStart = false;
 
 	// Application is running
 	while (true)
 	{
+		// Show menu file
 		if (menuFile)
 		{
 			loadMenuFile();
@@ -176,8 +197,7 @@ int main()
 				quit = true;
 			}
 
-			// TO-DO: set up a menu (CHIP-8 Emulator Load file with L (New image if the file is loaded into the memory,
-			// same (another file can be reloaded) plus) Play game with G (starts an emulation loop) )
+			// Load file with L
 			if ((event.type == SDL_EVENT_KEY_DOWN))
 			{
 				if (!openedDialog && event.key.scancode == SDL_SCANCODE_L && !emulationStart)
@@ -185,20 +205,12 @@ int main()
 					openedDialog = true;  // Don't let the user open another dialog until they close the current one
 
 					// Displays a dialog that lets the user select a file on their filesystem
-					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);  // => openedDialog = false;
-
-					// TO-DO: If file was read and loaded successfully, open menu play
-
-					menuFile = false;
-
-					// TO-DO: display a new image menu Play game with G
-					loadMenuPlay();
-					displayMenuPlay();
-
-					playGame = true;
+					SDL_ShowOpenFileDialog(callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);  
+					// => bool openedDialog = false, => void showMenuPlay() function is called
 				}
 
-				if (event.key.scancode == SDL_SCANCODE_G && playGame)
+				// Play game with P
+				if (event.key.scancode == SDL_SCANCODE_P && playGame)
 				{
 					openROMSDL();
 
@@ -209,7 +221,6 @@ int main()
 					emulationStart = true;
 				}
 			}
-
 
 			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
@@ -343,7 +354,7 @@ void updateRenderer(SDL_Texture* new_texture)
 bool loadIntro()
 {
 	// Load an image into a texture
-	intro = IMG_LoadTexture(renderer, "intro.jpg");
+	intro = IMG_LoadTexture(renderer, "intro.png");
 	if (intro == NULL)
 	{
 		printf("Couldn't load an intro: %s\n", SDL_GetError());
@@ -399,7 +410,7 @@ void displayIntro()
 bool loadMenuFile()
 {
 	// Load an image into a texture
-	menu_file = IMG_LoadTexture(renderer, "intro.jpg");
+	menu_file = IMG_LoadTexture(renderer, "menu_file.png");
 	if (menu_file == NULL)
 	{
 		printf("Couldn't load a menu_file: %s\n", SDL_GetError());
@@ -422,7 +433,7 @@ bool loadMenuPlay()
 	menu_file = NULL;
 
 	// Load an image into a texture
-	menu_play = IMG_LoadTexture(renderer, "menu_play.jpg");
+	menu_play = IMG_LoadTexture(renderer, "menu_play.png");
 	if (menu_play == NULL)
 	{
 		printf("Couldn't load a menu_play: %s\n", SDL_GetError());
