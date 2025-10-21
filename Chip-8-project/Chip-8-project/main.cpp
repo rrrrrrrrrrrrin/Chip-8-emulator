@@ -42,8 +42,8 @@ void gfxUpdate();
 #define SCREEN_HEIGHT 32
 
 // Parameters of width and height for SDL window
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 320
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 512
 
 // Global SDL variables
 SDL_Window* window = NULL;
@@ -390,7 +390,7 @@ void displayIntro()
 		// Update renderer with a new texture
 		updateRenderer(intro);
 
-		if (alpha == 255) { SDL_Delay(DELAY); }
+		if (alpha == 255) { SDL_Delay(DELAY*2); }
 
 		alpha -= 17;
 
