@@ -1,5 +1,4 @@
 #include "chip8.h"
-#include "sound_chip8.h"
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
 
@@ -38,8 +37,6 @@ void Chip8::initialize()
 
 	// Reset flags
 	draw_flag = false;
-
-	loadSound8();
 }
 
 void Chip8::update_timers() {
@@ -383,11 +380,8 @@ void Chip8::emulateCycle() {
 	update_timers();
 }
 
-void Chip8::setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key)
+void Chip8::setKey(unsigned int X, unsigned char key)
 {
-	int i = 10;
-	playSound8();
-	pauseSound8();
 	V[X] = key;
 	pc += 2;
 }
@@ -403,25 +397,25 @@ void Chip8::setKeys(unsigned int X)
 	A 0 B F               Z X C V
 	*/
 
-	if (keysSDL[SDL_SCANCODE_1]) { setKey(X, SDL_SCANCODE_1, 0x1); } else
-	if (keysSDL[SDL_SCANCODE_2]) { setKey(X, SDL_SCANCODE_2, 0x2); } else
-	if (keysSDL[SDL_SCANCODE_3]) { setKey(X, SDL_SCANCODE_3, 0x3); } else
-	if (keysSDL[SDL_SCANCODE_4]) { setKey(X, SDL_SCANCODE_4, 0xC); } else
+	if (keysSDL[SDL_SCANCODE_1]) { setKey(X, 0x1); } else
+	if (keysSDL[SDL_SCANCODE_2]) { setKey(X, 0x2); } else
+	if (keysSDL[SDL_SCANCODE_3]) { setKey(X, 0x3); } else
+	if (keysSDL[SDL_SCANCODE_4]) { setKey(X, 0xC); } else
 
-	if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, SDL_SCANCODE_Q, 0x4); } else
-	if (keysSDL[SDL_SCANCODE_W]) { setKey(X, SDL_SCANCODE_W, 0x5); } else
-	if (keysSDL[SDL_SCANCODE_E]) { setKey(X, SDL_SCANCODE_E, 0x6); } else
-	if (keysSDL[SDL_SCANCODE_R]) { setKey(X, SDL_SCANCODE_R, 0xD); } else
+	if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, 0x4); } else
+	if (keysSDL[SDL_SCANCODE_W]) { setKey(X, 0x5); } else
+	if (keysSDL[SDL_SCANCODE_E]) { setKey(X, 0x6); } else
+	if (keysSDL[SDL_SCANCODE_R]) { setKey(X, 0xD); } else
 
-	if (keysSDL[SDL_SCANCODE_A]) { setKey(X, SDL_SCANCODE_A, 0x7); } else
-	if (keysSDL[SDL_SCANCODE_S]) { setKey(X, SDL_SCANCODE_S, 0x8); } else
-	if (keysSDL[SDL_SCANCODE_D]) { setKey(X, SDL_SCANCODE_D, 0x9); } else
-	if (keysSDL[SDL_SCANCODE_F]) { setKey(X, SDL_SCANCODE_F, 0xE); } else
+	if (keysSDL[SDL_SCANCODE_A]) { setKey(X, 0x7); } else
+	if (keysSDL[SDL_SCANCODE_S]) { setKey(X, 0x8); } else
+	if (keysSDL[SDL_SCANCODE_D]) { setKey(X, 0x9); } else
+	if (keysSDL[SDL_SCANCODE_F]) { setKey(X, 0xE); } else
 
-	if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, SDL_SCANCODE_Z, 0xA); } else
-	if (keysSDL[SDL_SCANCODE_X]) { setKey(X, SDL_SCANCODE_X, 0x0); } else
-	if (keysSDL[SDL_SCANCODE_C]) { setKey(X, SDL_SCANCODE_C, 0xB); } else
-	if (keysSDL[SDL_SCANCODE_V]) { setKey(X, SDL_SCANCODE_V, 0xF); }
+	if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, 0xA); } else
+	if (keysSDL[SDL_SCANCODE_X]) { setKey(X, 0x0); } else
+	if (keysSDL[SDL_SCANCODE_C]) { setKey(X, 0xB); } else
+	if (keysSDL[SDL_SCANCODE_V]) { setKey(X, 0xF); }
 
 	else
 	{

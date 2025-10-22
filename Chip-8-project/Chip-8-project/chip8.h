@@ -65,7 +65,7 @@ public:
 	unsigned char gfx[64 * 32] = { 0 };
 
 	const bool* keysSDL = SDL_GetKeyboardState(nullptr);
-	void setKey(unsigned int X, SDL_Scancode SDL_SCANCODE, unsigned char key);
+	void setKey(unsigned int X, unsigned char key);
 	void setKeys(unsigned int X);
 
 	void clear_display();

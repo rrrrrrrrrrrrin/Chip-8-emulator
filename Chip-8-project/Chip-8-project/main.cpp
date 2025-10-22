@@ -1,4 +1,5 @@
 #include "chip8.h"
+#include "sound_chip8.h"
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL_image.h>
@@ -174,6 +175,8 @@ int main()
 		return 3;
 	}
 
+	loadSound8();
+
 	bool quit = false;
 	bool emulationStart = false;
 
@@ -221,6 +224,26 @@ int main()
 					emulationStart = true;
 				}
 			}
+
+			// ========================================================================================================================================================
+			// Check key presses for FX0A opcode and halt until the key is released; put all in a void function afterwards
+			if ((event.type == SDL_EVENT_KEY_DOWN && emulationStart))
+			{
+				if (event.key.scancode == SDL_SCANCODE_1)
+				{
+					playSound8();
+				}
+			}
+
+			if ((event.type == SDL_EVENT_KEY_UP && emulationStart))
+			{
+				if (event.key.scancode == SDL_SCANCODE_1)
+				{
+					pauseSound8();
+				}
+			}
+
+			// ===========================================================================================================================================================
 
 			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
