@@ -9,6 +9,8 @@ private:
 
 	unsigned char memory[4096] = { 0 };
 
+	unsigned char gfx[64 * 32] = { 0 };
+
 	unsigned char V[16] = { 0 };  // general purpose registers
 
 	unsigned short I = 0;  // index register
@@ -41,6 +43,12 @@ private:
 		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
 
+public:
+	unsigned char* get_gfx_ptr()
+	{
+		return gfx;
+	}
+
 	SDL_Scancode keys[16] =
 	{
 		SDL_SCANCODE_X,  // 0
@@ -60,9 +68,6 @@ private:
 		SDL_SCANCODE_F,  // E
 		SDL_SCANCODE_V   // F
 	};
-
-public:
-	unsigned char gfx[64 * 32] = { 0 };
 
 	const bool* keysSDL = SDL_GetKeyboardState(nullptr);
 	void setKey(unsigned int X, unsigned char key);

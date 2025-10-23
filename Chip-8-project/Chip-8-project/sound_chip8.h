@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdio>
 #include <SDL.h>
 
 // Global SDL_audio vars
@@ -31,22 +30,6 @@ bool loadSound8()
 	}
 
 	return success;
-}
-
-// SDL (and SDL audio subsystem) will be closed in the main program
-bool initSDL8()
-{
-	bool success = true;
-
-	if (SDL_Init(SDL_INIT_AUDIO) == false)
-	{
-		printf("Couldn't initialize SDL_audio: %s\n", SDL_GetError());
-		success = false;
-	}
-
-	if (!loadSound8()) { success = false; }
-
-	return true;
 }
 
 void playSound8()

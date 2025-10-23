@@ -225,25 +225,32 @@ int main()
 				}
 			}
 
-			// ========================================================================================================================================================
-			// Check key presses for FX0A opcode and halt until the key is released; put all in a void function afterwards
+			// Check key presses for FX0A opcode and make a sound until the key is released
 			if ((event.type == SDL_EVENT_KEY_DOWN && emulationStart))
 			{
-				if (event.key.scancode == SDL_SCANCODE_1)
+				for (int i = 0; i < 16; ++i)
 				{
-					playSound8();
+					SDL_Scancode scancode = chip8.keys[i];
+
+					if (event.key.scancode == scancode)
+					{
+						playSound8();
+					}
 				}
 			}
 
 			if ((event.type == SDL_EVENT_KEY_UP && emulationStart))
 			{
-				if (event.key.scancode == SDL_SCANCODE_1)
+				for (int i = 0; i < 16; ++i)
 				{
-					pauseSound8();
+					SDL_Scancode scancode = chip8.keys[i];
+
+					if (event.key.scancode == scancode)
+					{
+						pauseSound8();
+					}
 				}
 			}
-
-			// ===========================================================================================================================================================
 
 			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
@@ -292,6 +299,7 @@ bool initSDL()
 	}
 
 	if (!loadSound()) { success = false; }
+	if (!loadSound8()) { success = false; }  // from sound_chip8.h
 
 	// Create SDL window
 	window = SDL_CreateWindow("Rin's Chip-8 Emulator", WINDOW_WIDTH, WINDOW_HEIGHT, NULL);
@@ -512,7 +520,7 @@ void gfxUpdate()
 	// Buffer for converted pixels
 	unsigned int pixels[SCREEN_WIDTH * SCREEN_HEIGHT] = { 0 };
 	for (int px = 0; px < SCREEN_WIDTH * SCREEN_HEIGHT; px++) {
-		if (chip8.gfx[px] == 1)
+		if (chip8.get_gfx_ptr()[px] == 1)
 		{
 			pixels[px] = 0xFFFFFFFF;  // White pixel 
 		}
