@@ -358,13 +358,13 @@ void Chip8::emulateCycle() {
 			I = 80 + (5 * V[X]);
 			break;
 
-		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2
+		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2 (hundreds, tens, units of VX)
 		case 0x0003:
 		{
 			unsigned char VX = V[X];
 			memory[I] = VX / 100;
 			memory[I + 1] = VX % 100 / 10;
-			memory[I + 2] = VX % 5;
+			memory[I + 2] = VX % 10;
 			break;
 		}
 
