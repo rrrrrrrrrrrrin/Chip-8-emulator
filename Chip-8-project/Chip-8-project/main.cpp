@@ -27,8 +27,6 @@ void displayMenuFile();
 bool loadMenuPlay();
 void displayMenuPlay();
 
-void destroyMenuTextures();
-
 // Variables for application loop 
 bool menuFile = true;
 bool playGame = false;
@@ -218,8 +216,6 @@ int main()
 					openROMSDL();
 
 					playGame = false;
-
-					destroyMenuTextures();
 
 					emulationStart = true;
 				}
@@ -460,9 +456,6 @@ void displayMenuFile()
 
 bool loadMenuPlay()
 {
-	SDL_DestroyTexture(menu_file);
-	menu_file = NULL;
-
 	// Load an image into a texture
 	menu_play = IMG_LoadTexture(renderer, "menu_play.png");
 	if (menu_play == NULL)
@@ -479,12 +472,6 @@ void displayMenuPlay()
 {
 	// Update renderer with a new texture
 	updateRenderer(menu_play);
-}
-
-void destroyMenuTextures()
-{
-	SDL_DestroyTexture(menu_play);
-	menu_play = NULL;
 }
 
 bool initSDLtexture()
@@ -548,8 +535,15 @@ void gfxUpdate()
 void close()
 {
 	// Destroy SDL variables
+
+	// Destroy textures
+	SDL_DestroyTexture(menu_file);
+	menu_file = NULL;
 	SDL_DestroyTexture(texture);
 	texture = NULL;
+	SDL_DestroyTexture(menu_play);
+	menu_play = NULL;
+
 	SDL_DestroyRenderer(renderer);
 	renderer = NULL; 
 	SDL_DestroyWindow(window);
