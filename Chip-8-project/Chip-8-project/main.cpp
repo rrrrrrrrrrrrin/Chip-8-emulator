@@ -27,11 +27,6 @@ void displayMenuFile();
 bool loadMenuPlay();
 void displayMenuPlay();
 
-// Variables for application loop 
-bool menuFile = true;
-bool playGame = false;
-void showMenuPlay();
-
 // Functions to update the screen during emulation
 bool initSDLtexture();
 void gfxUpdate();
@@ -67,17 +62,7 @@ Chip8 chip8;
 // SDL_dialog vars and functions in the global space
 SDL_IOStream* SDL_file;
 bool openedDialog = false;
-
-void showMenuPlay()
-{
-	menuFile = false;
-
-	// Show menu play
-	loadMenuPlay();
-	displayMenuPlay();
-
-	playGame = true;
-}
+bool showMenuPlay = false;
 
 // Set up callback used by file dialog functions
 static const SDL_DialogFileFilter filters[] = 
@@ -113,7 +98,7 @@ static void SDLCALL callback(void* userdata, const char* const* filelist, int fi
 		openedDialog = false;
 
 		// If file was read and loaded successfully, open menu play
-		showMenuPlay();
+		showMenuPlay = true;
 
 		return;
 	}
@@ -177,6 +162,8 @@ int main()
 
 	bool quit = false;
 	bool emulationStart = false;
+	bool menuFile = true;
+	bool playGame = false;
 
 	// Application is running
 	while (true)
@@ -186,6 +173,19 @@ int main()
 		{
 			loadMenuFile();
 			displayMenuFile();
+		}
+
+		if (showMenuPlay)
+		{
+			menuFile = false;
+
+			// Show menu play
+			loadMenuPlay();
+			displayMenuPlay();
+
+			playGame = true;
+
+			showMenuPlay = false;
 		}
 
 		// Process the event queue once every frame BEFORE updating the game's state

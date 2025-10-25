@@ -1,6 +1,7 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
+#include <iostream>
 
 void Chip8::clear_display()
 {
@@ -288,6 +289,7 @@ void Chip8::emulateCycle() {
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0001:
 		{
+			std::cout << keys[V[X]] << ' ' << X << ' ' << V[X] << '\n';
 			SDL_Scancode SDL_SCANCODE = keys[V[X]];
 			if (keysSDL[SDL_SCANCODE] == false) {
 				pc += 2;

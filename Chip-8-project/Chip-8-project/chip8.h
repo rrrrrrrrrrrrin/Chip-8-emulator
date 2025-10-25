@@ -69,7 +69,7 @@ public:
 		SDL_SCANCODE_V   // F
 	};
 
-	const bool* keysSDL = SDL_GetKeyboardState(nullptr);
+	const bool* keysSDL = SDL_GetKeyboardState(NULL);
 	void setKey(unsigned int X, unsigned char key);
 	void setKeys(unsigned int X);
 
