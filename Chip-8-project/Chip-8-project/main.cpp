@@ -144,43 +144,54 @@ int main()
 		return 1;
 	}
 
+	// Load textures
 	if (!loadIntro())
 	{
 		printf("Failed to load intro\n");
 		return 2;
 	}
 
-	displayIntro();
+	if (!loadMenuFile())
+	{
+		printf("Failed to load menu file\n");
+		return 3;
+	}
+
+	if (!loadMenuPlay())
+	{
+		printf("Failed to load menu play\n");
+		return 4;
+	}
+
+	// displayIntro();
 
 	if (!initSDLtexture())
 	{
 		printf("Failed to load texture\n");
-		return 3;
+		return 5;
 	}
 
 	loadSound8();
 
 	bool quit = false;
 	bool emulationStart = false;
-	bool menuFile = true;
+	bool showMenuFile = true;
 	bool playGame = false;
 
 	// Application is running
 	while (true)
 	{
 		// Show menu file
-		if (menuFile)
+		if (showMenuFile)
 		{
-			loadMenuFile();
 			displayMenuFile();
 		}
 
 		if (showMenuPlay)
 		{
-			menuFile = false;
+			showMenuFile = false;
 
 			// Show menu play
-			loadMenuPlay();
 			displayMenuPlay();
 
 			playGame = true;
@@ -252,7 +263,7 @@ int main()
 			{
 				if (event.key.scancode == SDL_SCANCODE_ESCAPE)
 				{
-					menuFile = true; 
+					showMenuFile = true; 
 				}
 			}
 		}
@@ -260,7 +271,7 @@ int main()
 		if (quit) { break; }  // Stop application loop
 
 		// Stop emulation by initializing chip8 object and return to the menu (file)
-		if (menuFile)
+		if (showMenuFile)
 		{
 			emulationStart = false;
 			chip8.initialize();

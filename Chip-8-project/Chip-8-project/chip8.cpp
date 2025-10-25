@@ -98,6 +98,7 @@ void Chip8::emulateCycle() {
 
 	decodeOpcodes();
 
+	// These values do not represent X and Y in SOME opcodes
 	unsigned int X = (opcode & 0x0F00) >> 8; // move VX (opcode & 0x0F00) to the last nibble left to right
 	unsigned int Y = (opcode & 0x00F0) >> 4; // move VY (opcode & 0x00F0) to the last nibble left to right
 
@@ -200,45 +201,66 @@ void Chip8::emulateCycle() {
 			{
 				V[0xF] = 1;
 			}
+			else
+			{
+				V[0xF] = 0;
+			}
 			break;
 		}
 
-		// 8XY5: Set Vx = Vx - Vy, set VF to 1 if VX > VY (no borrow in subtraction)
+		// 8XY5: Set VX = VX - VY, set VF to 1 if VX > VY (no borrow in subtraction)
 		case 0x0005:
 			V[X] = V[X] - V[Y];
 
-			if (V[X] > V[Y])
+			if (V[X] > V[Y])  // if no borrow occured
 			{
 				V[0xF] = 1;
 			}
+			else
+			{
+				V[0xF] = 0;
+			}
 			break;
 
-		// 8XY6: Set VX = VX SHR 1 (VX / 2), set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
+		// 8XY6: Set VX = VX SHR 1 (VX / 2), BEFORE SHIFTING set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
 		case 0x0006:
-			V[X] >>= 1;
 
 			if ((V[X] & 0x0000000F) == 1) {
 				V[0xF] = 1;
 			}
+			else
+			{
+				V[0xF] = 0;
+			}
+
+			V[X] >>= 1;
 			break;
 
 		// 8XY7: Set VX = VY - VX, set VF to 1 if VY > VX (no borrow in subtraction)
 		case 0x0007:
 			V[X] = V[Y] - V[X];
 
-			if (V[Y] > V[X])
+			if (V[Y] > V[X])  // if no borrow occured
 			{
 				V[0xF] = 1;
+			}
+			else
+			{
+				V[0xF] = 0;
 			}
 			break;
 
 		// 8XYE: Set VX = VX SHL 1, set VF to 1 if MSBit is 1
 		case 0x000E:
-			V[X] <<= 1;
-
 			if ((V[X] & 0xF0000000) == 1) {
 				V[0xF] = 1;
 			}
+			else
+			{
+				V[0xF] = 0;
+			}
+
+			V[X] <<= 1;
 			break;
 
 		default:
@@ -289,7 +311,6 @@ void Chip8::emulateCycle() {
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0001:
 		{
-			std::cout << keys[V[X]] << ' ' << X << ' ' << V[X] << '\n';
 			SDL_Scancode SDL_SCANCODE = keys[V[X]];
 			if (keysSDL[SDL_SCANCODE] == false) {
 				pc += 2;
@@ -360,7 +381,7 @@ void Chip8::emulateCycle() {
 			I = 80 + (5 * V[X]);
 			break;
 
-		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2 (hundreds, tens, units of VX)
+		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2 (hundreds, tens, ones of VX)
 		case 0x0003:
 		{
 			unsigned char VX = V[X];
