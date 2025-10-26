@@ -38,6 +38,8 @@ void Chip8::initialize()
 
 	// Reset flags
 	draw_flag = false;
+
+	keysSDL = SDL_GetKeyboardState(NULL);
 }
 
 void Chip8::update_timers() {
