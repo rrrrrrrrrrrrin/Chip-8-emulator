@@ -518,7 +518,7 @@ void gfxUpdate()
 	// Buffer for converted pixels
 	unsigned int pixels[SCREEN_WIDTH * SCREEN_HEIGHT] = { 0 };
 	for (int px = 0; px < SCREEN_WIDTH * SCREEN_HEIGHT; px++) {
-		if (chip8.get_gfx_ptr()[px] == 1)
+		if (chip8.gfx[px] == 1)
 		{
 			pixels[px] = 0xFFFFFFFF;  // White pixel 
 		}

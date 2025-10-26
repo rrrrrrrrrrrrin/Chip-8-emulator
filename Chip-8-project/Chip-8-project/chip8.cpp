@@ -41,7 +41,7 @@ void Chip8::initialize()
 }
 
 void Chip8::update_timers() {
-	if (delay_timer > 0) {
+	if (delay_timer > 0) { 
 		--delay_timer;
 	}
 
@@ -60,20 +60,25 @@ void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
 void Chip8::draw(unsigned int X, unsigned int Y, char N)
 {
-	// for the sprites to wrap: VX % 64 (display - 64x32) or VX & 63
-	char VX = V[X] & 63;
-	char VY = V[Y] & 31;
+	// for the sprites to wrap: VX % 64 (display - 64x32)
+	char VX = V[X] % 64;
+	char VY = V[Y] % 32;
+
+	V[0xF] = 0;  // V[0xF] is set to 0 if none of the pixels are flipped from set to unset
 
 	for (int heightpx = 0; heightpx < N; heightpx++)
 	{
 		// Read N bytes starting from I
-		unsigned short byte = memory[I + heightpx];
+		unsigned short sprite_byte = memory[I + heightpx];
 
 		// Process each byte
 		for (int widthpx = 0; widthpx < 8; widthpx++)
 		{
-			if ((byte & (0x80 >> widthpx)) != 0)  // data & (0x80 >> widthpx) is to parse byte by bits from left to right
+			unsigned short sprite_pixel = sprite_byte & (0x80 >> widthpx);  // to parse sprite_byte by bits from left to right
+
+			if (sprite_pixel != 0)
 			{
+				// if sprite_pixel is not 0 and screen pixel (gfx[...]) is 1, then screen_pixel = 0 (xor it with 1: 1 ^ 1 = 0)
 				if (gfx[VX + widthpx + ((VY + heightpx) * 64)] == 1) {
 					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision occured
 				}
@@ -92,7 +97,7 @@ void Chip8::decodeOpcodes() {
 
 void Chip8::emulateCycle() {
 	// Fetch opcode
-	opcode = memory[pc] << 8 | memory[pc + 1];  // fetch two bytes from memory and merge into one opcode
+	opcode = memory[pc] << 8 | memory[pc + 1];  // fetch two bytes from memory and merge into one opcode (opcode is 16 bits)
 
 	pc += 2;  // opcode is 2 bytes. Move program counter two cells in the memory (one cell - one byte)
 
@@ -116,6 +121,10 @@ void Chip8::emulateCycle() {
 		// 00EE: Returns from a subroutine
 		case 0x000E:
 			--sp;
+
+			// sp (stack pointer) is an unsigned char so a negative would be a large number
+			if (sp > 15) { sp = 0; }
+
 			pc = stack[sp];
 			break;
 
@@ -133,6 +142,9 @@ void Chip8::emulateCycle() {
 	case 0x2000:
 		stack[sp] = pc;
 		++sp;
+
+		if (sp > 15) { sp = 15; }
+
 		pc = opcode & 0x0FFF;
 		break;
 
@@ -301,7 +313,12 @@ void Chip8::emulateCycle() {
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
 		{
-			SDL_Scancode SDL_SCANCODE = keys[V[X]];
+			unsigned char key = V[X] & 0x000F;  // consider only the lowest nibble
+
+			SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_X;  // initialize with SDL_SCANCODE_X
+
+			checkKey(SDL_SCANCODE, key);  // => sets SDL_SCANCODE according to the key
+
 			if (keysSDL[SDL_SCANCODE] == true) {
 				pc += 2;
 			}
@@ -311,7 +328,12 @@ void Chip8::emulateCycle() {
 		// EXA1: Skip next opcode if key with the value of VX is not pressed
 		case 0x0001:
 		{
-			SDL_Scancode SDL_SCANCODE = keys[V[X]];
+			unsigned char key = V[X] & 0x000F;  // consider only the lowest nibble
+
+			SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_X;  // initialize with SDL_SCANCODE_X
+
+			checkKey(SDL_SCANCODE, key);  // => sets SDL_SCANCODE according to the key
+
 			if (keysSDL[SDL_SCANCODE] == false) {
 				pc += 2;
 			}
@@ -377,8 +399,13 @@ void Chip8::emulateCycle() {
 
 		// FX29: Set I = location of sprite (font character) for digit VX
 		case 0x0009:
-			// VX sprite was written to memory during initialization, bcs fontset was saved in memory starting at location 80. Each sprite consists of 5 bytes (only consider the lowest nibble). Just point I to the right sprite
-			I = 80 + (5 * V[X]);
+			/*	VX sprite was written to memory during initialization,
+				bcs fontset was saved in memory starting at location 80.
+				Each sprite consists of 5 bytes so to get the address of the first byte of any character,
+				just point I to the right sprite with an offset
+			*/
+
+			I = 80 + (5 * (V[X] & 0x000F));
 			break;
 
 		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2 (hundreds, tens, ones of VX)
@@ -403,6 +430,61 @@ void Chip8::emulateCycle() {
 	update_timers();
 }
 
+void Chip8::checkKey(SDL_Scancode &SDL_SCANCODE, unsigned char key)
+{
+	switch (key)
+	{
+	case 0:
+		SDL_SCANCODE = SDL_SCANCODE_X;
+		break;
+	case 1:
+		SDL_SCANCODE = SDL_SCANCODE_1;
+		break;
+	case 2:
+		SDL_SCANCODE = SDL_SCANCODE_2;
+		break;
+	case 3:
+		SDL_SCANCODE = SDL_SCANCODE_3;
+		break;
+	case 4:
+		SDL_SCANCODE = SDL_SCANCODE_Q;
+		break;
+	case 5:
+		SDL_SCANCODE = SDL_SCANCODE_W;
+		break;
+	case 6:
+		SDL_SCANCODE = SDL_SCANCODE_E;
+		break;
+	case 7:
+		SDL_SCANCODE = SDL_SCANCODE_A;
+		break;
+	case 8:
+		SDL_SCANCODE = SDL_SCANCODE_S;
+		break;
+	case 9:
+		SDL_SCANCODE = SDL_SCANCODE_D;
+		break;
+	case 0xA:
+		SDL_SCANCODE = SDL_SCANCODE_Z;
+		break;
+	case 0xB:
+		SDL_SCANCODE = SDL_SCANCODE_C;
+		break;
+	case 0xC:
+		SDL_SCANCODE = SDL_SCANCODE_4;
+		break;
+	case 0xD:
+		SDL_SCANCODE = SDL_SCANCODE_R;
+		break;
+	case 0xE:
+		SDL_SCANCODE = SDL_SCANCODE_F;
+		break;
+	case 0xF:
+		SDL_SCANCODE = SDL_SCANCODE_V;
+		break;
+	}
+}
+
 void Chip8::setKey(unsigned int X, unsigned char key)
 {
 	V[X] = key;
@@ -411,15 +493,6 @@ void Chip8::setKey(unsigned int X, unsigned char key)
 
 void Chip8::setKeys(unsigned int X)
 {
-	/* 
-	COSMAC VIP's Chip-8   Customary modern PC's 
-	keyboard layout:	  Chip-8 keyboard layout:
-	1 2 3 C				  1 2 3 4
-	4 5 6 D			      Q W E R
-	7 8 9 E               A S D F
-	A 0 B F               Z X C V
-	*/
-
 	if (keysSDL[SDL_SCANCODE_1]) { setKey(X, 0x1); } else
 	if (keysSDL[SDL_SCANCODE_2]) { setKey(X, 0x2); } else
 	if (keysSDL[SDL_SCANCODE_3]) { setKey(X, 0x3); } else

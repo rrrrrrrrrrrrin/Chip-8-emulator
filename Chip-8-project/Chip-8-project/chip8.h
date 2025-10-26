@@ -9,8 +9,6 @@ private:
 
 	unsigned char memory[4096] = { 0 };
 
-	unsigned char gfx[64 * 32] = { 0 };
-
 	unsigned char V[16] = { 0 };  // general purpose registers
 
 	unsigned short I = 0;  // index register
@@ -44,10 +42,16 @@ private:
 	};
 
 public:
-	unsigned char* get_gfx_ptr()
-	{
-		return gfx;
-	}
+	unsigned char gfx[64 * 32] = { 0 };
+
+	/*
+		COSMAC VIP's Chip-8   Customary modern PC's
+		keyboard layout:	  Chip-8 keyboard layout:
+		1 2 3 C				  1 2 3 4
+		4 5 6 D			      Q W E R
+		7 8 9 E               A S D F
+		A 0 B F               Z X C V
+	*/
 
 	SDL_Scancode keys[16] =
 	{
@@ -72,6 +76,8 @@ public:
 	const bool* keysSDL = SDL_GetKeyboardState(NULL);
 	void setKey(unsigned int X, unsigned char key);
 	void setKeys(unsigned int X);
+
+	void checkKey(SDL_Scancode& SDL_SCANCODE, unsigned char key);
 
 	void clear_display();
 	void initialize();
