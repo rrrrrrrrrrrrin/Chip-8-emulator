@@ -90,9 +90,9 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 }
 
 void Chip8::decodeOpcodes() {
-	printf("1 byte: 0x%X\n", memory[pc]);
-	printf("2 byte: 0x%X\n", memory[pc + 1]);
- 	printf("Full opcode: 0x%X\n", opcode);
+	/*printf("1 byte: 0x%X\n", memory[pc]);
+	printf("2 byte: 0x%X\n", memory[pc + 1]);*/
+	printf("Full opcode: 0x%X\n", opcode);
 }
 
 void Chip8::emulateCycle() {
