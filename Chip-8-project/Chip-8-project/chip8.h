@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 #include <SDL.h>
 
@@ -13,9 +14,6 @@ private:
 
 	unsigned short I = 0;  // index register
 	unsigned short pc = 0;  // program counter
-
-	unsigned char delay_timer = 60;
-	unsigned char sound_timer = 60;
 
 	unsigned short stack[16] = { 0 };
 	unsigned short sp = 0;  // stack pointer
@@ -43,6 +41,32 @@ private:
 
 public:
 	unsigned char gfx[64 * 32] = { 0 };
+
+	unsigned char delay_timer = 60;
+	unsigned char sound_timer = 60;
+
+	// For FX0A opcode
+	bool checkKeyRelease = false;
+	SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_UNKNOWN;
+
+	void setKey(unsigned int X, unsigned char key);
+	void setKeys(unsigned int X);
+
+	// For E000 opcodes
+	const bool* keysSDL = SDL_GetKeyboardState(NULL);
+	void checkKey(SDL_Scancode& SDL_SCANCODE, unsigned char key);
+
+	// For DXYN opcode
+	bool draw_flag = false;
+	void draw(unsigned int X, unsigned int Y, char N);
+
+	void clear_display();
+	void initialize();
+
+	void loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer);
+
+	void decodeOpcodes();
+	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
 
 	/*
 		COSMAC VIP's Chip-8   Customary modern PC's
@@ -72,23 +96,4 @@ public:
 		SDL_SCANCODE_F,  // E
 		SDL_SCANCODE_V   // F
 	};
-
-	const bool* keysSDL = SDL_GetKeyboardState(NULL);
-	void setKey(unsigned int X, unsigned char key);
-	void setKeys(unsigned int X);
-
-	void checkKey(SDL_Scancode& SDL_SCANCODE, unsigned char key);
-
-	void clear_display();
-	void initialize();
-
-	void loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer);
-
-	bool draw_flag = false;
-	void draw(unsigned int X, unsigned int Y, char N);
-
-	void decodeOpcodes();
-	void emulateCycle();  // Fetch, decode, execute opcodes & update timers
-
-	void update_timers();
 };

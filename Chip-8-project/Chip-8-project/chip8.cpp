@@ -1,7 +1,6 @@
 #include "chip8.h"
 #include <cstdio>  // for printf
 #include <cstring>  // for memset
-#include <iostream>
 
 void Chip8::clear_display()
 {
@@ -39,17 +38,8 @@ void Chip8::initialize()
 	// Reset flags
 	draw_flag = false;
 
+	SDL_SCANCODE = SDL_SCANCODE_UNKNOWN;
 	keysSDL = SDL_GetKeyboardState(NULL);
-}
-
-void Chip8::update_timers() {
-	if (delay_timer > 0) { 
-		--delay_timer;
-	}
-
-	if (sound_timer > 0) {
-		--sound_timer;
-	}
 }
 
 void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
@@ -192,16 +182,19 @@ void Chip8::emulateCycle() {
 		// 8XY1: Set VX = VX OR VY
 		case 0x0001:
 			V[X] |= V[Y];
+			V[0xF] = 0;
 			break;
 
 		// 8XY2: Set VX = VX AND VY
 		case 0x0002:
 			V[X] &= V[Y];
+			V[0xF] = 0;
 			break;
 
 		// 8XY3:  Set VX = VX XOR VY
 		case 0x0003:
 			V[X] ^= V[Y];
+			V[0xF] = 0;
 			break;
 
 		// 8XY4: Set VX = VX + VY, set VF = carry
@@ -317,7 +310,7 @@ void Chip8::emulateCycle() {
 		{
 			unsigned char key = V[X] & 0x000F;  // consider only the lowest nibble
 
-			SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_X;  // initialize with SDL_SCANCODE_X
+			SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_UNKNOWN;  // initialize
 
 			checkKey(SDL_SCANCODE, key);  // => sets SDL_SCANCODE according to the key
 
@@ -332,7 +325,7 @@ void Chip8::emulateCycle() {
 		{
 			unsigned char key = V[X] & 0x000F;  // consider only the lowest nibble
 
-			SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_X;  // initialize with SDL_SCANCODE_X
+			SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_UNKNOWN;  // initialize
 
 			checkKey(SDL_SCANCODE, key);  // => sets SDL_SCANCODE according to the key
 
@@ -355,7 +348,7 @@ void Chip8::emulateCycle() {
 			V[X] = delay_timer;
 			break;
 
-		// FX0A: Wait for a key press, store the value of the key in VX
+		// FX0A: Wait for a key release, store the value of the key in VX
 		case 0x000A:
 		{
 			setKeys(X);
@@ -428,17 +421,12 @@ void Chip8::emulateCycle() {
 	default:
 		printf("Unknown opcode: 0x%X\n", opcode);
 	}
-
-	update_timers();
 }
 
 void Chip8::checkKey(SDL_Scancode &SDL_SCANCODE, unsigned char key)
 {
 	switch (key)
 	{
-	case 0:
-		SDL_SCANCODE = SDL_SCANCODE_X;
-		break;
 	case 1:
 		SDL_SCANCODE = SDL_SCANCODE_1;
 		break;
@@ -447,6 +435,9 @@ void Chip8::checkKey(SDL_Scancode &SDL_SCANCODE, unsigned char key)
 		break;
 	case 3:
 		SDL_SCANCODE = SDL_SCANCODE_3;
+		break;
+	case 0xC:
+		SDL_SCANCODE = SDL_SCANCODE_4;
 		break;
 	case 4:
 		SDL_SCANCODE = SDL_SCANCODE_Q;
@@ -457,6 +448,9 @@ void Chip8::checkKey(SDL_Scancode &SDL_SCANCODE, unsigned char key)
 	case 6:
 		SDL_SCANCODE = SDL_SCANCODE_E;
 		break;
+	case 0xD:
+		SDL_SCANCODE = SDL_SCANCODE_R;
+		break;
 	case 7:
 		SDL_SCANCODE = SDL_SCANCODE_A;
 		break;
@@ -466,20 +460,17 @@ void Chip8::checkKey(SDL_Scancode &SDL_SCANCODE, unsigned char key)
 	case 9:
 		SDL_SCANCODE = SDL_SCANCODE_D;
 		break;
+	case 0xE:
+		SDL_SCANCODE = SDL_SCANCODE_F;
+		break;
 	case 0xA:
 		SDL_SCANCODE = SDL_SCANCODE_Z;
 		break;
+	case 0:
+		SDL_SCANCODE = SDL_SCANCODE_X;
+		break;
 	case 0xB:
 		SDL_SCANCODE = SDL_SCANCODE_C;
-		break;
-	case 0xC:
-		SDL_SCANCODE = SDL_SCANCODE_4;
-		break;
-	case 0xD:
-		SDL_SCANCODE = SDL_SCANCODE_R;
-		break;
-	case 0xE:
-		SDL_SCANCODE = SDL_SCANCODE_F;
 		break;
 	case 0xF:
 		SDL_SCANCODE = SDL_SCANCODE_V;
@@ -491,34 +482,66 @@ void Chip8::setKey(unsigned int X, unsigned char key)
 {
 	V[X] = key;
 	pc += 2;
+
+	checkKeyRelease = false;
 }
 
 void Chip8::setKeys(unsigned int X)
 {
-	if (keysSDL[SDL_SCANCODE_1]) { setKey(X, 0x1); } else
-	if (keysSDL[SDL_SCANCODE_2]) { setKey(X, 0x2); } else
-	if (keysSDL[SDL_SCANCODE_3]) { setKey(X, 0x3); } else
-	if (keysSDL[SDL_SCANCODE_4]) { setKey(X, 0xC); } else
+	checkKeyRelease = true;
 
-	if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, 0x4); } else
-	if (keysSDL[SDL_SCANCODE_W]) { setKey(X, 0x5); } else
-	if (keysSDL[SDL_SCANCODE_E]) { setKey(X, 0x6); } else
-	if (keysSDL[SDL_SCANCODE_R]) { setKey(X, 0xD); } else
-
-	if (keysSDL[SDL_SCANCODE_A]) { setKey(X, 0x7); } else
-	if (keysSDL[SDL_SCANCODE_S]) { setKey(X, 0x8); } else
-	if (keysSDL[SDL_SCANCODE_D]) { setKey(X, 0x9); } else
-	if (keysSDL[SDL_SCANCODE_F]) { setKey(X, 0xE); } else
-
-	if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, 0xA); } else
-	if (keysSDL[SDL_SCANCODE_X]) { setKey(X, 0x0); } else
-	if (keysSDL[SDL_SCANCODE_C]) { setKey(X, 0xB); } else
-	if (keysSDL[SDL_SCANCODE_V]) { setKey(X, 0xF); }
-
-	else
+	switch (SDL_SCANCODE)
 	{
+	case SDL_SCANCODE_1:
+		setKey(X, 0);
+		break;
+	case SDL_SCANCODE_2:
+		setKey(X, 2);
+		break;
+	case SDL_SCANCODE_3:
+		setKey(X, 3);
+		break;
+	case SDL_SCANCODE_4:
+		setKey(X, 0xC);
+		break;
+	case SDL_SCANCODE_Q:
+		setKey(X, 4);
+		break;
+	case SDL_SCANCODE_W:
+		setKey(X, 5);
+		break;
+	case SDL_SCANCODE_E:
+		setKey(X, 6);
+		break;
+	case SDL_SCANCODE_R:
+		setKey(X, 0xD);
+		break;
+	case SDL_SCANCODE_A:
+		setKey(X, 7);
+		break;
+	case SDL_SCANCODE_S:
+		setKey(X, 8);
+		break;
+	case SDL_SCANCODE_D:
+		setKey(X, 9);
+		break;
+	case SDL_SCANCODE_F:
+		setKey(X, 0xE);
+		break;
+	case SDL_SCANCODE_Z:
+		setKey(X, 0xA);
+		break;
+	case SDL_SCANCODE_X:
+		setKey(X, 0);
+		break;
+	case SDL_SCANCODE_C:
+		setKey(X, 0xB);
+		break;
+	case SDL_SCANCODE_V:
+		setKey(X, 0xF);
+		break;
+	default:
 		pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed) 
-		update_timers();
-		printf("Unknown scancode\n");
+		printf("Unknown scancode (FX0A)\n");
 	}
 }

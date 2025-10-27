@@ -17,15 +17,11 @@ void pauseSound();
 // Update renderer with a new texture
 void updateRenderer(SDL_Texture* new_texture);
 
-// Functions to show intro and menus in application loop
+// Functions to show intro and menu in application loop
 bool loadIntro();
 void displayIntro();
-
 bool loadMenuFile();
 void displayMenuFile();
-
-bool loadMenuPlay();
-void displayMenuPlay();
 
 // Functions to update the screen during emulation
 bool initSDLtexture();
@@ -46,7 +42,6 @@ SDL_Renderer* renderer = NULL;
 
 SDL_Texture* intro = NULL;
 SDL_Texture* menu_file = NULL;
-SDL_Texture* menu_play = NULL;
 
 // Global SDL_image vars
 int alpha = 255;
@@ -59,10 +54,26 @@ Uint32 audio_len = 0;
 
 Chip8 chip8;
 
+void update_timers()
+{
+	if (chip8.delay_timer > 0) {
+		--chip8.delay_timer;
+	}
+
+	if (chip8.sound_timer > 0) {
+		playSound8();
+		--chip8.sound_timer;
+	}
+	else
+	{
+		pauseSound8();
+	}
+}
+
 // SDL_dialog vars and functions in the global space
 SDL_IOStream* SDL_file;
 bool openedDialog = false;
-bool showMenuPlay = false;
+bool playGame = false;
 
 // Set up callback used by file dialog functions
 static const SDL_DialogFileFilter filters[] = 
@@ -97,8 +108,7 @@ static void SDLCALL callback(void* userdata, const char* const* filelist, int fi
 
 		openedDialog = false;
 
-		// If file was read and loaded successfully, open menu play
-		showMenuPlay = true;
+		playGame = true;
 
 		return;
 	}
@@ -145,22 +155,16 @@ int main()
 	}
 
 	// Load textures
-	if (!loadIntro())
+	/*if (!loadIntro())
 	{
 		printf("Failed to load intro\n");
 		return 2;
-	}
+	}*/
 
 	if (!loadMenuFile())
 	{
 		printf("Failed to load menu file\n");
 		return 3;
-	}
-
-	if (!loadMenuPlay())
-	{
-		printf("Failed to load menu play\n");
-		return 4;
 	}
 
 	// displayIntro();
@@ -176,7 +180,6 @@ int main()
 	bool quit = false;
 	bool emulationStart = false;
 	bool showMenuFile = true;
-	bool playGame = false;
 
 	// Application is running
 	while (true)
@@ -185,18 +188,6 @@ int main()
 		if (showMenuFile)
 		{
 			displayMenuFile();
-		}
-
-		if (showMenuPlay)
-		{
-			showMenuFile = false;
-
-			// Show menu play
-			displayMenuPlay();
-
-			playGame = true;
-
-			showMenuPlay = false;
 		}
 
 		// Process the event queue once every frame BEFORE updating the game's state
@@ -227,22 +218,9 @@ int main()
 					openROMSDL();
 
 					playGame = false;
+					showMenuFile = false;
 
 					emulationStart = true;
-				}
-			}
-
-			// Check key presses for FX0A opcode and make a sound until the key is released
-			if ((event.type == SDL_EVENT_KEY_DOWN && emulationStart))
-			{
-				for (int i = 0; i < 16; ++i)
-				{
-					SDL_Scancode scancode = chip8.keys[i];
-
-					if (event.key.scancode == scancode)
-					{
-						playSound8();
-					}
 				}
 			}
 
@@ -255,6 +233,12 @@ int main()
 					if (event.key.scancode == scancode)
 					{
 						pauseSound8();
+
+						// Check if any key is released and use this info in FX0A opcode
+						if (chip8.checkKeyRelease)
+						{
+							chip8.SDL_SCANCODE = scancode;
+						}
 					}
 				}
 			}
@@ -285,6 +269,8 @@ int main()
 			// Update the screen if the draw_flag is true
 			if (chip8.draw_flag) {
 				gfxUpdate();
+				update_timers();
+				std::cout << chip8.delay_timer << '\n';
 			}
 		}
 	}
@@ -465,26 +451,6 @@ void displayMenuFile()
 	updateRenderer(menu_file);
 }
 
-bool loadMenuPlay()
-{
-	// Load an image into a texture
-	menu_play = IMG_LoadTexture(renderer, "menu_play.png");
-	if (menu_play == NULL)
-	{
-		printf("Couldn't load a menu_play: %s\n", SDL_GetError());
-		SDL_Quit();
-		return false;
-	}
-
-	return true;
-}
-
-void displayMenuPlay()
-{
-	// Update renderer with a new texture
-	updateRenderer(menu_play);
-}
-
 bool initSDLtexture()
 {
 	bool success = true;
@@ -552,8 +518,6 @@ void close()
 	menu_file = NULL;
 	SDL_DestroyTexture(texture);
 	texture = NULL;
-	SDL_DestroyTexture(menu_play);
-	menu_play = NULL;
 
 	SDL_DestroyRenderer(renderer);
 	renderer = NULL; 
