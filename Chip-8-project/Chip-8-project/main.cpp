@@ -3,6 +3,7 @@
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL_image.h>
+#include <chrono>
 
 bool openROMSDL();  // Read file into the buffer and load it into chip8's memory
 
@@ -261,16 +262,45 @@ int main()
 			chip8.initialize();
 		}
 
+		// TODO: USE TIME from SDL getTicks() and all
+		
+		/*using Time = std::chrono::steady_clock;
+		using ms = std::chrono::milliseconds;
+
+		using float_sec = std::chrono::duration<float>;
+
+		using float_time_point = std::chrono::time_point<Time, float_sec>;
+
+		auto start_time = Time::now();*/
+
+		// Start emulation
 		if (emulationStart)
 		{
+			//// As long as the timers' value is above 0, they should be decremented by one 60 times per second (i. e. 60 Hz)
+			//// Independently of the speed of the emulation cycle
+
+			//// TODO: Decrement timers 60 times per second
+
+			//auto current_time = Time::now();
+			//std::chrono::duration<float> diff = current_time - start_time;
+
+			//std::chrono::duration<float> one_sec(1);
+
+			//if (diff >= one_sec)
+			//{
+			//	update_timers();
+			//}
+			//
+
 			// Emulate one cycle
 			chip8.emulateCycle();
+
+			// update_timers();
 
 			// Update the screen if the draw_flag is true
 			if (chip8.draw_flag) {
 				gfxUpdate();
 				update_timers();
-				std::cout << chip8.delay_timer << '\n';
 			}
 		}
 	}

@@ -52,9 +52,12 @@ void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
 void Chip8::draw(unsigned int X, unsigned int Y, char N)
 {
-	// for the sprites to wrap: VX % 64 (display - 64x32)
-	char VX = V[X] % 64;
-	char VY = V[Y] % 32;
+	//// for the sprites to wrap: VX % 64 (display - 64x32)
+	//char VX = V[X] % 64;
+	//char VY = V[Y] % 32;
+
+	char VX = V[X];
+	char VY = V[Y];
 
 	V[0xF] = 0;  // V[0xF] is set to 0 if none of the pixels are flipped from set to unset
 
@@ -71,10 +74,10 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 			if (sprite_pixel != 0)
 			{
 				// if sprite_pixel is not 0 and screen pixel (gfx[...]) is 1, then screen_pixel = 0 (xor it with 1: 1 ^ 1 = 0)
-				if (gfx[VX + widthpx + ((VY + heightpx) * 64)] == 1) {
+				if (gfx[(VX + widthpx) + ((VY + heightpx) * 64)] == 1) {
 					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision occured
 				}
-				gfx[VX + widthpx + ((VY + heightpx) * 64)] ^= 1;
+				gfx[(VX + widthpx) + ((VY + heightpx) * 64)] ^= 1;
 			}
 		}
 	}

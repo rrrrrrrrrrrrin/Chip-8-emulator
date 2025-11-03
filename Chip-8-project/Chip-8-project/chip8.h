@@ -40,7 +40,7 @@ private:
 	};
 
 public:
-	unsigned char gfx[64 * 32] = { 0 };
+	unsigned char gfx[64 * 32] = { 0 };  // 64 is screen width, 32 is screen height
 
 	unsigned char delay_timer = 60;
 	unsigned char sound_timer = 60;
