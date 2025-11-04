@@ -3,7 +3,7 @@
 #include <cstdio>  // for printf
 #include <fstream>
 #include <SDL_image.h>
-#include <chrono>
+#include <string>
 
 bool openROMSDL();  // Read file into the buffer and load it into chip8's memory
 
@@ -182,6 +182,9 @@ int main()
 	bool emulationStart = false;
 	bool showMenuFile = true;
 
+	uint64_t fps = 0;  // Number of frames per second
+	uint64_t last_time = 0;
+
 	// Application is running
 	while (true)
 	{
@@ -225,25 +228,6 @@ int main()
 				}
 			}
 
-			if ((event.type == SDL_EVENT_KEY_UP && emulationStart))
-			{
-				for (int i = 0; i < 16; ++i)
-				{
-					SDL_Scancode scancode = chip8.keys[i];
-
-					if (event.key.scancode == scancode)
-					{
-						pauseSound8();
-
-						// Check if any key is released and use this info in FX0A opcode
-						if (chip8.checkKeyRelease)
-						{
-							chip8.SDL_SCANCODE = scancode;
-						}
-					}
-				}
-			}
-
 			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
 				if (event.key.scancode == SDL_SCANCODE_ESCAPE)
@@ -262,35 +246,13 @@ int main()
 			chip8.initialize();
 		}
 
-		// TODO: USE TIME from SDL getTicks() and all
-		
-		/*using Time = std::chrono::steady_clock;
-		using ms = std::chrono::milliseconds;
-
-		using float_sec = std::chrono::duration<float>;
-
-		using float_time_point = std::chrono::time_point<Time, float_sec>;
-
-		auto start_time = Time::now();*/
-
 		// Start emulation
 		if (emulationStart)
 		{
-			//// As long as the timers' value is above 0, they should be decremented by one 60 times per second (i. e. 60 Hz)
-			//// Independently of the speed of the emulation cycle
+			// As long as the timers' value is above 0, they should be decremented by one 60 times per second (i. e. 60 Hz)
+			// Independently of the speed of the emulation cycle
 
-			//// TODO: Decrement timers 60 times per second
-
-			//auto current_time = Time::now();
-			//std::chrono::duration<float> diff = current_time - start_time;
-
-			//std::chrono::duration<float> one_sec(1);
-
-			//if (diff >= one_sec)
-			//{
-			//	update_timers();
-			//}
-			//
+			uint64_t current_time = SDL_GetTicks();
 
 			// Emulate one cycle
 			chip8.emulateCycle();
@@ -300,6 +262,21 @@ int main()
 			// Update the screen if the draw_flag is true
 			if (chip8.draw_flag) {
 				gfxUpdate();
+			}
+
+			++fps;
+
+			// Per frame calculation of elapsed time
+			uint64_t delta_time = SDL_GetTicks() - current_time;
+
+			// FPS Calculation
+			// Timers decrement by 60 per second. In SDL we express time in milliseconds. 1 second is 1000 ms
+			// 1000/60 = 16.6ms. Each (approximated) 16 ms, decrement timers by one
+			if (current_time > last_time + 16)  // add 16 ms
+			{
+				last_time = current_time;
+				SDL_SetWindowTitle(window, std::to_string(fps).c_str());
+				fps = 0;
 				update_timers();
 			}
 		}

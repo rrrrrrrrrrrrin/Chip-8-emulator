@@ -45,16 +45,11 @@ public:
 	unsigned char delay_timer = 60;
 	unsigned char sound_timer = 60;
 
-	// For FX0A opcode
-	bool checkKeyRelease = false;
-	SDL_Scancode SDL_SCANCODE = SDL_SCANCODE_UNKNOWN;
-
 	void setKey(unsigned int X, unsigned char key);
 	void setKeys(unsigned int X);
 
-	// For E000 opcodes
+	// For E000 and FX0A opcodes
 	const bool* keysSDL = SDL_GetKeyboardState(NULL);
-	void checkKey(SDL_Scancode& SDL_SCANCODE, unsigned char key);
 
 	// For DXYN opcode
 	bool draw_flag = false;
