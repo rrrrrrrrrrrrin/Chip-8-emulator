@@ -75,12 +75,9 @@ void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
 void Chip8::draw(unsigned int X, unsigned int Y, char N)
 {
-	char VX = V[X];
-	char VY = V[Y];
-
-	// for the sprites to wrap: VX % 64, VY % 32 (display - 64x32)
-	if (VX > 63) { VX %= 64; }
-	if (VY > 31) { VY %= 32; }
+	// for the sprites to wrap if greater than 63 or 31: VX % 64, VY % 32 (display - 64x32)
+	char VX = V[X] % 64;
+	char VY = V[Y] % 32;
 
 	V[0xF] = 0;  // V[0xF] is set to 0 if none of the pixels are flipped from set to unset
 
@@ -94,10 +91,10 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 		{
 			unsigned short sprite_pixel = sprite_byte & (0x80 >> widthpx);  // to parse sprite_byte by bits from left to right
 
-			if (sprite_pixel != 0)
+			if (sprite_pixel != 0)  // must be != 0 (not == 1)
 			{
 				// if sprite_pixel is not 0 and screen pixel (gfx[...]) is 1, then screen_pixel = 0 (xor it with 1: 1 ^ 1 = 0)
-				if (gfx[(VX + widthpx) + ((VY + heightpx) * 64)] == 1) {
+				if (gfx[(VX + widthpx) + ((VY + heightpx) * 64)] != 0) {
 					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision occured
 				}
 				gfx[(VX + widthpx) + ((VY + heightpx) * 64)] ^= 1;
@@ -119,7 +116,7 @@ void Chip8::emulateCycle() {
 
 	pc += 2;  // opcode is 2 bytes. Move program counter two cells in the memory (one cell - one byte)
 
-	// decodeOpcodes();
+	decodeOpcodes();
 
 	// These values do not represent X and Y in SOME opcodes
 	unsigned int X = (opcode & 0x0F00) >> 8; // move VX (opcode & 0x0F00) to the last nibble left to right
@@ -139,10 +136,6 @@ void Chip8::emulateCycle() {
 		// 00EE: Returns from a subroutine
 		case 0x000E:
 			--sp;
-
-			// sp (stack pointer) is an unsigned char so a negative would be a large number
-			if (sp > 15) { sp = 0; }
-
 			pc = stack[sp];
 			break;
 
@@ -160,8 +153,6 @@ void Chip8::emulateCycle() {
 	case 0x2000:
 		stack[sp] = pc;
 		++sp;
-
-		if (sp > 15) { sp = 15; }
 
 		pc = opcode & 0x0FFF;
 		break;
@@ -243,9 +234,7 @@ void Chip8::emulateCycle() {
 
 		// 8XY5: Set VX = VX - VY, set VF to 1 if VX > VY (no borrow in subtraction)
 		case 0x0005:
-			V[X] = V[X] - V[Y];
-
-			if (V[X] > V[Y])  // if no borrow occured
+			if (V[X] >= V[Y])  // if no borrow occured
 			{
 				V[0xF] = 1;
 			}
@@ -253,11 +242,12 @@ void Chip8::emulateCycle() {
 			{
 				V[0xF] = 0;
 			}
+
+			V[X] = V[X] - V[Y];
 			break;
 
-		// 8XY6: Set VX = VX SHR 1 (VX / 2), BEFORE SHIFTING set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
+		// 8XY6: Set VX = VX SHR 1 (VX / 2), BEFORE SHIFTING? set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
 		case 0x0006:
-
 			if ((V[X] & 0x0000000F) == 1) {
 				V[0xF] = 1;
 			}
@@ -271,9 +261,7 @@ void Chip8::emulateCycle() {
 
 		// 8XY7: Set VX = VY - VX, set VF to 1 if VY > VX (no borrow in subtraction)
 		case 0x0007:
-			V[X] = V[Y] - V[X];
-
-			if (V[Y] > V[X])  // if no borrow occured
+			if (V[Y] >= V[X])  // if no borrow occured
 			{
 				V[0xF] = 1;
 			}
@@ -281,6 +269,8 @@ void Chip8::emulateCycle() {
 			{
 				V[0xF] = 0;
 			}
+
+			V[X] = V[Y] - V[X];
 			break;
 
 		// 8XYE: Set VX = VX SHL 1, set VF to 1 if MSBit is 1
@@ -331,6 +321,9 @@ void Chip8::emulateCycle() {
 	case 0xE000:
 		init_keys();
 
+		keysSDL = SDL_GetKeyboardState(NULL);
+		SDL_PumpEvents();
+
 		switch (opcode & 0x000F)
 		{
 		// EX9E: Skip next opcode if key with the value of VX is pressed
@@ -370,7 +363,7 @@ void Chip8::emulateCycle() {
 			V[X] = delay_timer;
 			break;
 
-		// FX0A: Wait for a key release (my implementation waits for a key press), store the value of the key in VX
+		// FX0A: Wait for a key release!, store the value of the key in VX
 		// If nothing is being pressed while this opcode waits, halt (pc -= 2 and keep updating timers)
 		case 0x000A:
 		{
@@ -450,7 +443,7 @@ void Chip8::emulateCycle() {
 	}
 }
 
-void Chip8::setKey(unsigned int X, unsigned char key)
+void Chip8::setKey(unsigned int X, int key, SDL_Scancode scancode=SDL_SCANCODE_UNKNOWN)
 {
 	V[X] = key;
 	pc += 2;
@@ -458,29 +451,55 @@ void Chip8::setKey(unsigned int X, unsigned char key)
 
 void Chip8::setKeys(unsigned int X)
 {
-	if (keysSDL[SDL_SCANCODE_1]) { setKey(X, 0x1); } else
-	if (keysSDL[SDL_SCANCODE_2]) { setKey(X, 0x2); } else
-	if (keysSDL[SDL_SCANCODE_3]) { setKey(X, 0x3); } else
-	if (keysSDL[SDL_SCANCODE_4]) { setKey(X, 0xC); } else
-
-	if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, 0x4); } else
-	if (keysSDL[SDL_SCANCODE_W]) { setKey(X, 0x5); } else
-	if (keysSDL[SDL_SCANCODE_E]) { setKey(X, 0x6); } else
-	if (keysSDL[SDL_SCANCODE_R]) { setKey(X, 0xD); } else
-
-	if (keysSDL[SDL_SCANCODE_A]) { setKey(X, 0x7); } else
-	if (keysSDL[SDL_SCANCODE_S]) { setKey(X, 0x8); } else
-	if (keysSDL[SDL_SCANCODE_D]) { setKey(X, 0x9); } else
-	if (keysSDL[SDL_SCANCODE_F]) { setKey(X, 0xE); } else
-
-	if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, 0xA); } else
-	if (keysSDL[SDL_SCANCODE_X]) { setKey(X, 0x0); } else
-	if (keysSDL[SDL_SCANCODE_C]) { setKey(X, 0xB); } else
-	if (keysSDL[SDL_SCANCODE_V]) { setKey(X, 0xF); } 
-
-	else
+	for (int key = 0; key < 16; key++)
 	{
-		pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed) 
-		// printf("Unknown scancode (FX0A)\n");
+		SDL_Scancode scancode = keys[key];
+		if (keysSDL[scancode])
+		{
+			while (keysSDL[scancode])
+			{
+				printf("key is pressed\n");
+
+				keysSDL = SDL_GetKeyboardState(NULL);
+				SDL_PumpEvents();
+
+				if (keysSDL[scancode] == false)
+				{
+					printf("key is released\n");
+
+					setKey(X, key);
+
+					return;
+				}
+			}
+		}
 	}
+
+	pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed and then released) 
+
+	//if (keysSDL[SDL_SCANCODE_1]) { setKey(X, 0x1, SDL_SCANCODE_1); } // else
+	//if (keysSDL[SDL_SCANCODE_2]) { setKey(X, 0x2); } else
+	//if (keysSDL[SDL_SCANCODE_3]) { setKey(X, 0x3); } else
+	//if (keysSDL[SDL_SCANCODE_4]) { setKey(X, 0xC); } else
+
+	//if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, 0x4); } else
+	//if (keysSDL[SDL_SCANCODE_W]) { setKey(X, 0x5); } else
+	//if (keysSDL[SDL_SCANCODE_E]) { setKey(X, 0x6); } else
+	//if (keysSDL[SDL_SCANCODE_R]) { setKey(X, 0xD); } else
+
+	//if (keysSDL[SDL_SCANCODE_A]) { setKey(X, 0x7); } else
+	//if (keysSDL[SDL_SCANCODE_S]) { setKey(X, 0x8); } else
+	//if (keysSDL[SDL_SCANCODE_D]) { setKey(X, 0x9); } else
+	//if (keysSDL[SDL_SCANCODE_F]) { setKey(X, 0xE); } else
+
+	//if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, 0xA); } else
+	//if (keysSDL[SDL_SCANCODE_X]) { setKey(X, 0x0); } else
+	//if (keysSDL[SDL_SCANCODE_C]) { setKey(X, 0xB); } else
+	//if (keysSDL[SDL_SCANCODE_V]) { setKey(X, 0xF); } 
+
+	//else
+	//{
+	//	pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed and then released) 
+	//	// printf("Unknown scancode (FX0A)\n");
+	//}
 }

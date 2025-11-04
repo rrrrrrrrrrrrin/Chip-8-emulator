@@ -45,7 +45,7 @@ public:
 	unsigned char delay_timer = 60;
 	unsigned char sound_timer = 60;
 
-	void setKey(unsigned int X, unsigned char key);
+	void setKey(unsigned int X, int key, SDL_Scancode scancode);
 	void setKeys(unsigned int X);
 
 	// For E000 and FX0A opcodes
