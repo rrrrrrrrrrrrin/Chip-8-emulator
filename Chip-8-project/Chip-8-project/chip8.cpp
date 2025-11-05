@@ -77,20 +77,26 @@ void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
 void Chip8::draw(unsigned int X, unsigned int Y, char N)
 {
-	// for the sprites to wrap if greater than 63 or 31: VX % 64, VY % 32 (display - 64x32)
+	V[0xF] = 0;  // V[0xF] is set to 0 if none of the pixels are flipped from set to unset
+
+	// For the sprites to WRAP if greater than 63 or 31: VX % 64, VY % 32 (display - 64x32)
 	char VX = V[X] % 64;
 	char VY = V[Y] % 32;
 
-	V[0xF] = 0;  // V[0xF] is set to 0 if none of the pixels are flipped from set to unset
-
 	for (int heightpx = 0; heightpx < N; heightpx++)
 	{
+		// CLIPPING: if the sprite is at location greater than 63 (by width), then clip it by breaking the loop and stopping drawing the sprite
+		if (VX + heightpx > 63) { break; }
+
 		// Read N bytes starting from I
 		unsigned short sprite_byte = memory[I + heightpx];
 
 		// Process each byte
 		for (int widthpx = 0; widthpx < 8; widthpx++)
 		{
+			// CLIPPING: if the sprite is at location greater than 31 (by height), then clip it by breaking the loop and stopping drawing the sprite
+			if (VY + widthpx > 31) { break; }
+
 			unsigned short sprite_pixel = sprite_byte & (0x80 >> widthpx);  // to parse sprite_byte by bits from left to right
 
 			if (sprite_pixel != 0)  // must be != 0 (not == 1)
@@ -124,6 +130,9 @@ void Chip8::emulateCycle() {
 	unsigned int X = (opcode & 0x0F00) >> 8; // move VX (opcode & 0x0F00) to the last nibble left to right
 	unsigned int Y = (opcode & 0x00F0) >> 4; // move VY (opcode & 0x00F0) to the last nibble left to right
 
+	// For math opcode 8XY4-8XYE
+	unsigned char VF = 0;
+
 	// Decode opcode
 	switch (opcode & 0xF000)  // check opcode through leftmost nibble (most significant nibble)
 	{
@@ -137,8 +146,8 @@ void Chip8::emulateCycle() {
 
 		// 00EE: Returns from a subroutine
 		case 0x000E:
-			--sp;
 			pc = stack[sp];
+			--sp;
 			break;
 
 		default:
@@ -153,8 +162,8 @@ void Chip8::emulateCycle() {
 
 	// 2NNN: Call subroutine at NNN
 	case 0x2000:
-		stack[sp] = pc;
 		++sp;
+		stack[sp] = pc;
 
 		pc = opcode & 0x0FFF;
 		break;
@@ -216,6 +225,7 @@ void Chip8::emulateCycle() {
 			V[0xF] = 0;
 			break;
 
+		// For math opcodes 8XY4-8XYE: first calculate the value for VF and store it in a temp variable, then set VX, and finally set VF to the temp value
 		// 8XY4: Set VX = VX + VY, set VF = carry
 		case 0x0004:
 		{
@@ -225,12 +235,14 @@ void Chip8::emulateCycle() {
 			// If the result is greater than 8 bits (size of char) (> 255), VF is set to 1
 			if (sum > 255)
 			{
-				V[0xF] = 1;
+				VF = 1;
 			}
 			else
 			{
-				V[0xF] = 0;
+				VF = 0;
 			}
+
+			V[0XF] = VF;
 			break;
 		}
 
@@ -238,54 +250,66 @@ void Chip8::emulateCycle() {
 		case 0x0005:
 			if (V[X] >= V[Y])  // if no borrow occured
 			{
-				V[0xF] = 1;
+				VF = 1;
 			}
 			else
 			{
-				V[0xF] = 0;
+				VF = 0;
 			}
 
 			V[X] = V[X] - V[Y];
+
+			V[0xF] = VF;
 			break;
 
-		// 8XY6: Set VX = VX SHR 1 (VX / 2), BEFORE SHIFTING? set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
+		// 8XY6: Set VX = VY, then VX = VX SHR 1 (VX / 2), set VF to 1 if LSBit is 1 (SHR is shift right bitwise operator >>)
 		case 0x0006:
-			if ((V[X] & 0x0000000F) == 1) {
-				V[0xF] = 1;
+			V[X] = V[Y];
+
+			if ((V[X] & 0x00000001) == 1) {
+				VF = 1;
 			}
 			else
 			{
-				V[0xF] = 0;
+				VF = 0;
 			}
 
 			V[X] >>= 1;
+
+			V[0xF] = VF;
 			break;
 
 		// 8XY7: Set VX = VY - VX, set VF to 1 if VY > VX (no borrow in subtraction)
 		case 0x0007:
 			if (V[Y] >= V[X])  // if no borrow occured
 			{
-				V[0xF] = 1;
+				VF = 1;
 			}
 			else
 			{
-				V[0xF] = 0;
+				VF = 0;
 			}
 
 			V[X] = V[Y] - V[X];
+
+			V[0XF] = VF;
 			break;
 
-		// 8XYE: Set VX = VX SHL 1, set VF to 1 if MSBit is 1
+		// 8XYE: Set VX = VY, then VX = VX SHL 1 (VX * 2), set VF to 1 if MSBit is 1
 		case 0x000E:
-			if ((V[X] & 0xF0000000) == 1) {
-				V[0xF] = 1;
+			V[X] = V[Y];
+
+			if ( ( (V[X] & 0x80) >> 7) == 1 ) {  // 2^7 = 128 (0x80)
+				VF = 1;
 			}
 			else
 			{
-				V[0xF] = 0;
+				VF = 0;
 			}
 
 			V[X] <<= 1;
+
+			V[0xF] = VF;
 			break;
 
 		default:
@@ -307,12 +331,12 @@ void Chip8::emulateCycle() {
 
 	// BNNN: Jump to location NNN + V0
 	case 0xB000:
-		pc = opcode & 0x0FFF + V[0];
+		pc = (opcode & 0x0FFF) + V[0];
 		break;
 
 	// CXNN: Set VX = random byte (random number from 0 to 255) AND NN
 	case 0xC000:
-		V[X] = rand() % 256 & opcode & 0x00FF;
+		V[X] = rand() % 256 & (opcode & 0x00FF);
 		break;
 
 	// DXYN: Draws a sprite at coordinate (VX, VY), width - 8 pxs, height - N pxs
@@ -380,7 +404,7 @@ void Chip8::emulateCycle() {
 					memory[I + i] = V[i];
 				}
 
-				I += X;  // original chip8 instruction (FX55 and FX65), some modern interpretators leave index I unchanged
+				I += X + 1;  // original chip8 instruction (FX55 and FX65), modern interpreters leave index I unchanged
 				break;
 
 			// FX65: Read registers V0 through Vx from memory starting at location I
@@ -389,7 +413,7 @@ void Chip8::emulateCycle() {
 					V[i] = memory[I + i];
 				}
 
-				I += X;
+				I += X + 1;
 				break;
 
 			default:
@@ -450,9 +474,6 @@ void Chip8::setKeys(unsigned int X)
 	{
 		if (keypad_last_state[key] == 1 && keypad_current_state[key] == 0)  // key was released
 		{
-			std::cout << keypad_last_state[key] << ' ' << key << " Last state" << '\n';
-			std::cout << keypad_current_state[key] << ' ' << key << " Current state" << '\n';
-
 			setKey(X, key);
 		}
 	}
