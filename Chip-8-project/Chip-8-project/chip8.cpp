@@ -61,8 +61,10 @@ void Chip8::initialize()
 	// Reset flags
 	draw_flag = false;
 
-	keysSDL = SDL_GetKeyboardState(NULL);
-	init_keys();  // Keys are initialized in E000 opcodes anyway. Here, initialization is just in case
+	init_keys();
+
+	std::memset(keypad_last_state, 0, sizeof(keypad_last_state));
+	std::memset(keypad_current_state, 0, sizeof(keypad_current_state));
 }
 
 void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
@@ -116,7 +118,7 @@ void Chip8::emulateCycle() {
 
 	pc += 2;  // opcode is 2 bytes. Move program counter two cells in the memory (one cell - one byte)
 
-	decodeOpcodes();
+	// decodeOpcodes();
 
 	// These values do not represent X and Y in SOME opcodes
 	unsigned int X = (opcode & 0x0F00) >> 8; // move VX (opcode & 0x0F00) to the last nibble left to right
@@ -319,20 +321,14 @@ void Chip8::emulateCycle() {
 		break;
 
 	case 0xE000:
-		init_keys();
-
-		keysSDL = SDL_GetKeyboardState(NULL);
-		SDL_PumpEvents();
-
 		switch (opcode & 0x000F)
 		{
 		// EX9E: Skip next opcode if key with the value of VX is pressed
 		case 0x000E:
 		{
 			unsigned char key = V[X] & 0x000F;  // consider only the lowest nibble
-			SDL_Scancode scancode = keys[key];
 
-			if (keysSDL[scancode] == true) {
+			if (keypad_current_state[key] == 1) {
 				pc += 2;
 			}
 			break;
@@ -342,9 +338,8 @@ void Chip8::emulateCycle() {
 		case 0x0001:
 		{
 			unsigned char key = V[X] & 0x000F;  // consider only the lowest nibble
-			SDL_Scancode scancode = keys[key];
 
-			if (keysSDL[scancode] == false) {
+			if (keypad_current_state[key] == 0) {
 				pc += 2;
 			}
 			break;
@@ -453,53 +448,14 @@ void Chip8::setKeys(unsigned int X)
 {
 	for (int key = 0; key < 16; key++)
 	{
-		SDL_Scancode scancode = keys[key];
-		if (keysSDL[scancode])
+		if (keypad_last_state[key] == 1 && keypad_current_state[key] == 0)  // key was released
 		{
-			while (keysSDL[scancode])
-			{
-				printf("key is pressed\n");
+			std::cout << keypad_last_state[key] << ' ' << key << " Last state" << '\n';
+			std::cout << keypad_current_state[key] << ' ' << key << " Current state" << '\n';
 
-				keysSDL = SDL_GetKeyboardState(NULL);
-				SDL_PumpEvents();
-
-				if (keysSDL[scancode] == false)
-				{
-					printf("key is released\n");
-
-					setKey(X, key);
-
-					return;
-				}
-			}
+			setKey(X, key);
 		}
 	}
 
 	pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed and then released) 
-
-	//if (keysSDL[SDL_SCANCODE_1]) { setKey(X, 0x1, SDL_SCANCODE_1); } // else
-	//if (keysSDL[SDL_SCANCODE_2]) { setKey(X, 0x2); } else
-	//if (keysSDL[SDL_SCANCODE_3]) { setKey(X, 0x3); } else
-	//if (keysSDL[SDL_SCANCODE_4]) { setKey(X, 0xC); } else
-
-	//if (keysSDL[SDL_SCANCODE_Q]) { setKey(X, 0x4); } else
-	//if (keysSDL[SDL_SCANCODE_W]) { setKey(X, 0x5); } else
-	//if (keysSDL[SDL_SCANCODE_E]) { setKey(X, 0x6); } else
-	//if (keysSDL[SDL_SCANCODE_R]) { setKey(X, 0xD); } else
-
-	//if (keysSDL[SDL_SCANCODE_A]) { setKey(X, 0x7); } else
-	//if (keysSDL[SDL_SCANCODE_S]) { setKey(X, 0x8); } else
-	//if (keysSDL[SDL_SCANCODE_D]) { setKey(X, 0x9); } else
-	//if (keysSDL[SDL_SCANCODE_F]) { setKey(X, 0xE); } else
-
-	//if (keysSDL[SDL_SCANCODE_Z]) { setKey(X, 0xA); } else
-	//if (keysSDL[SDL_SCANCODE_X]) { setKey(X, 0x0); } else
-	//if (keysSDL[SDL_SCANCODE_C]) { setKey(X, 0xB); } else
-	//if (keysSDL[SDL_SCANCODE_V]) { setKey(X, 0xF); } 
-
-	//else
-	//{
-	//	pc -= 2;  // Decrement to start the FX0A opcode again (remain in a wait state until a key is pressed and then released) 
-	//	// printf("Unknown scancode (FX0A)\n");
-	//}
 }

@@ -1,9 +1,14 @@
 #include "chip8.h"
 #include "sound_chip8.h"
-#include <cstdio>  // for printf
-#include <fstream>
+
 #include <SDL_image.h>
-#include <string>
+
+#include <fstream>
+
+#include <cstdio>  // for printf
+
+#include <algorithm>  // for std::copy
+#include <iterator>  // for std::begin, std::end
 
 bool openROMSDL();  // Read file into the buffer and load it into chip8's memory
 
@@ -182,7 +187,6 @@ int main()
 	bool emulationStart = false;
 	bool showMenuFile = true;
 
-	uint64_t fps = 0;  // Number of frames per second
 	uint64_t last_time = 0;
 
 	// Application is running
@@ -228,6 +232,36 @@ int main()
 				}
 			}
 
+			// ===========================================================
+
+			if (event.type == SDL_EVENT_KEY_DOWN)
+			{
+				for (int key = 0; key < 16; key++)
+				{
+					SDL_Scancode scancode = chip8.keys[key];
+
+					if (event.key.scancode == scancode)
+					{
+						chip8.keypad_current_state[key] = 1;
+					}
+				}
+			}
+
+			if (event.type == SDL_EVENT_KEY_UP)
+			{
+				for (int key = 0; key < 16; key++)
+				{
+					SDL_Scancode scancode = chip8.keys[key];
+
+					if (event.key.scancode == scancode)
+					{
+						chip8.keypad_current_state[key] = 0;
+					}
+				}
+			}
+
+			// ===========================================================
+
 			if (event.type == SDL_EVENT_KEY_DOWN)
 			{
 				if (event.key.scancode == SDL_SCANCODE_ESCAPE)
@@ -257,14 +291,14 @@ int main()
 			// Emulate one cycle
 			chip8.emulateCycle();
 
-			// update_timers();
-
 			// Update the screen if the draw_flag is true
 			if (chip8.draw_flag) {
 				gfxUpdate();
 			}
 
-			++fps;
+			// Copy the current state of the keypad into the last one for future comparison
+			// (last state is previous frame, current state is the current frame)
+			std::copy(std::begin(chip8.keypad_current_state), std::end(chip8.keypad_current_state), chip8.keypad_last_state);
 
 			// Per frame calculation of elapsed time
 			uint64_t delta_time = SDL_GetTicks() - current_time;
@@ -275,8 +309,6 @@ int main()
 			if (current_time > last_time + 16)  // add 16 ms
 			{
 				last_time = current_time;
-				SDL_SetWindowTitle(window, std::to_string(fps).c_str());
-				fps = 0;
 				update_timers();
 			}
 		}

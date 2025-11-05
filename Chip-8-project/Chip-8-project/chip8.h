@@ -49,7 +49,8 @@ public:
 	void setKeys(unsigned int X);
 
 	// For E000 and FX0A opcodes
-	const bool* keysSDL = SDL_GetKeyboardState(NULL);
+	unsigned int keypad_last_state[16] = { 0 };
+	unsigned int keypad_current_state[16] = { 0 };
 
 	// For DXYN opcode
 	bool draw_flag = false;
@@ -72,6 +73,7 @@ public:
 		A 0 B F               Z X C V
 	*/
 
+	// Used in main.cpp when checking keypad input
 	SDL_Scancode keys[16] =
 	{
 		SDL_SCANCODE_X,  // 0
