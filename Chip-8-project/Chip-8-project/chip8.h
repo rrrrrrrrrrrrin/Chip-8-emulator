@@ -18,7 +18,9 @@ private:
 	unsigned short stack[16] = { 0 };
 	unsigned short sp = 0;  // stack pointer
 
-	// Each sprite (font character) is made up of 5 bytes
+	// Built-in font, with sprite data representing the hexadecimal numbers from 0 through F
+	// Each font character should be 4 pixels wide and 5 pixels tall
+	// These font sprites are drawn just like regular sprites (set the index register I to the sprite’s memory location)
 	unsigned char fontset[80] =
 	{
 		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0

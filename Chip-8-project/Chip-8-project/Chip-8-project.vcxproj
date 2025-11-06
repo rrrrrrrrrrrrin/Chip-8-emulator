@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\vclibs\SDL3_image-3.2.4\include;C:\vclibs\SDL3-3.2.22\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\vclibs\SDL3_image-3.2.4\lib\x64;C:\vclibs\SDL3-3.2.22\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3_image-3.2.4\include;C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3-3.2.22\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3_image-3.2.4\lib\x64;C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3-3.2.22\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\vclibs\SDL3_image-3.2.4\include;C:\vclibs\SDL3-3.2.22\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\vclibs\SDL3_image-3.2.4\lib\x64;C:\vclibs\SDL3-3.2.22\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3_image-3.2.4\include;C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3-3.2.22\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3_image-3.2.4\lib\x64;C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3-3.2.22\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\vclibs\SDL3_image-3.2.4\include\SDL3_image;C:\vclibs\SDL3-3.2.22\include\SDL3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3_image-3.2.4\include\SDL3_image;C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3-3.2.22\include\SDL3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +129,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\vclibs\SDL3_image-3.2.4\include\SDL3_image;C:\vclibs\SDL3-3.2.22\include\SDL3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3_image-3.2.4\include\SDL3_image;C:\Users\0berd\Desktop\Chip-8-emulator\Chip-8-project\vclibs\SDL3-3.2.22\include\SDL3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

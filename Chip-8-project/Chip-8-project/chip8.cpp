@@ -50,7 +50,7 @@ void Chip8::initialize()
 	std::memset(stack, 0, sizeof(stack));
 
 	// Load the fontset (group of sprites representing 0-F stored in memory to 0x50)
-	for (int i = 0; i < 80; i++) {
+	for (int i = 0; i < 0x50; i++) {
 		memory[i] = fontset[i];
 	}
 
@@ -85,8 +85,6 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 	// V[0xF] is set to 0 if none of the pixels are flipped from set to unset, 
 	// AFTER setting VX and VY (so that VX and VY (if X or Y = F) may be overwritten by VF)
 	V[0xF] = 0;
-
-	bool f = false;
 
 	for (int heightpx = 0; heightpx < N; heightpx++)  // rows
 	{
@@ -443,12 +441,12 @@ void Chip8::emulateCycle() {
 		// FX29: Set I = location of sprite (font character) for digit VX
 		case 0x0009:
 			/*	VX sprite was written to memory during initialization,
-				bcs fontset was saved in memory starting at location 80.
+				bcs fontset was saved in memory starting at location 0 to 0x50.
 				Each sprite consists of 5 bytes so to get the address of the first byte of any character,
-				just point I to the right sprite with an offset
+				just point I to the right sprite
 			*/
 
-			I = 80 + (5 * (V[X] & 0x000F));
+			I = 5 * (V[X] & 0x000F);
 			break;
 
 		// FX33: Store BCD (binary-coded decimal) representation of VX in memory locations I, I+1, and I+2 (hundreds, tens, ones of VX)
