@@ -74,29 +74,29 @@ void Chip8::loadROM(size_t SDL_file_size, std::vector<char> SDL_buffer)
 	}
 }
 
-// Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
+// Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. N rows where each row is 8 bits (sprite_byte)
 void Chip8::draw(unsigned int X, unsigned int Y, char N)
 {
-	V[0xF] = 0;  // V[0xF] is set to 0 if none of the pixels are flipped from set to unset
-
 	// For the sprites to WRAP if greater than 63 or 31: VX % 64, VY % 32 (display - 64x32)
+	// Sprites are clipped when they are partially drawn on the screen, and wrap if they are drawn out of bounds entirely
 	char VX = V[X] % 64;
 	char VY = V[Y] % 32;
 
-	for (int heightpx = 0; heightpx < N; heightpx++)
+	// V[0xF] is set to 0 if none of the pixels are flipped from set to unset, 
+	// AFTER setting VX and VY (so that VX and VY (if X or Y = F) may be overwritten by VF)
+	V[0xF] = 0;
+
+	bool f = false;
+
+	for (int heightpx = 0; heightpx < N; heightpx++)  // rows
 	{
-		// CLIPPING: if the sprite is at location greater than 63 (by width), then clip it by breaking the loop and stopping drawing the sprite
-		if (VX + heightpx > 63) { break; }
 
 		// Read N bytes starting from I
-		unsigned short sprite_byte = memory[I + heightpx];
+		unsigned short sprite_byte = memory[I + heightpx];  // sprite heightpx
 
-		// Process each byte
-		for (int widthpx = 0; widthpx < 8; widthpx++)
+		// Process each sprite_byte
+		for (int widthpx= 0; widthpx < 8; widthpx++)  // columns
 		{
-			// CLIPPING: if the sprite is at location greater than 31 (by height), then clip it by breaking the loop and stopping drawing the sprite
-			if (VY + widthpx > 31) { break; }
-
 			unsigned short sprite_pixel = sprite_byte & (0x80 >> widthpx);  // to parse sprite_byte by bits from left to right
 
 			if (sprite_pixel != 0)  // must be != 0 (not == 1)
@@ -106,15 +106,24 @@ void Chip8::draw(unsigned int X, unsigned int Y, char N)
 					V[0xF] = 1;  // VF is 1 if gfx pxs are flipped from set to unset; collision occured
 				}
 				gfx[(VX + widthpx) + ((VY + heightpx) * 64)] ^= 1;
+
+				// CLIPPING: if the sprite is at location greater than 63 (by width: VX + widthpx > 63) or 31 (by height: VY + heightpx > 31) 
+				// (after drawing the current 64th or 32nd pixel), clip it by breaking the loop and stopping drawing the sprite,
+				// so that it doesn't draw out of bounds
+				if ( (VX + widthpx) > 63 || (VY + heightpx) > 31) 
+				{ 
+					break; 
+				}
 			}
 		}
 	}
+
 	draw_flag = true;
 }
 
 void Chip8::decodeOpcodes() {
-	/*printf("1 byte: 0x%X\n", memory[pc]);
-	printf("2 byte: 0x%X\n", memory[pc + 1]);*/
+	/*printf("1st byte: 0x%X\n", memory[pc]);
+	printf("2nd byte: 0x%X\n", memory[pc + 1]);*/
 	printf("Full opcode: 0x%X\n", opcode);
 }
 
@@ -266,7 +275,7 @@ void Chip8::emulateCycle() {
 		case 0x0006:
 			V[X] = V[Y];
 
-			if ((V[X] & 0x00000001) == 1) {
+			if ((V[X] & 0x00000001) == 1) {  // 0x00000001 = 0x1 = 1
 				VF = 1;
 			}
 			else
@@ -299,7 +308,7 @@ void Chip8::emulateCycle() {
 		case 0x000E:
 			V[X] = V[Y];
 
-			if ( ( (V[X] & 0x80) >> 7) == 1 ) {  // 2^7 = 128 (0x80)
+			if ( ( (V[X] & 0x80) >> 7) == 1 ) {  // 2^7 = 128 = 0x80. 2^7 in binary: 0x10000000 and shift to the right to leave only MSB of VX
 				VF = 1;
 			}
 			else
