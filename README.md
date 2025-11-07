@@ -64,7 +64,7 @@ Jumping — BNNN opcode: "jump to address NNN + V0" doesn't use V0, but VX.
     +---------------------------------------------------+
 
 
-How to use: 
+**How to use**: 
 
 			open Chip-8-Release\Chip-8-emu.exe.  
 			
