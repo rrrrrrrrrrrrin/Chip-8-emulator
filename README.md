@@ -39,7 +39,6 @@ VF Reset — 8XY1-8XY3 opcodes: flag register VF is set to 0.
 Memory — FX55, FXY65 opcodes: index register I is incremented.  
 
 Display wait — Drawing sprites to the display waits for the vertical blank interrupt,  
-
                limiting their speed to max 60 sprites per second.  
 			   
 Clipping — sprites partially drawn on the screen get clipped.  
@@ -64,8 +63,6 @@ Key bindings (using scancodes):
     +---------------------------------------------------+
 
 How to use: open Chip-8-Release\Chip-8-emu.exe.  
-
             To load files: press L, to play/run a file: press P.  
-			
 	        Press Esc to come back to the menu.  
 			
