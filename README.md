@@ -63,7 +63,8 @@ Key bindings (using scancodes):
     +---------------------------------------------------+
 
 How to use: 
-			Open Chip-8-Release\Chip-8-emu.exe.  
+
+			open Chip-8-Release\Chip-8-emu.exe.  
 			
             To load files: press L, to play/run a file: press P.  
 			
