@@ -1,7 +1,7 @@
-CHIP-8 emulator written in C++ via SDL3 library.  
+# CHIP-8 emulator written in C++ via SDL3 library.  
 
 
-To compile a project in MSYS2 MINGW64 (in the project folder Chip-8-emu):  
+To **compile** a project in MSYS2 MINGW64 (in the project folder Chip-8-emu):  
 
 
 g++ chip8.cpp main.cpp -o "Rin's Chip-8 Emulator.exe" \  
@@ -14,13 +14,13 @@ g++ chip8.cpp main.cpp -o "Rin's Chip-8 Emulator.exe" \
 -mwindows  
 
 
-Download and unpack Chip-8-Release.zip, run "Rin's Chip-8 Emulator.exe"  
+**Download** and unpack Chip-8-Release.zip, run "Rin's Chip-8 Emulator.exe"  
 
 
 This emulator's instructions are of modern behaviour.  
 
 
-Quirks:    
+**Quirks**:    
 
 		   1. VF Reset: on 
 
@@ -51,8 +51,7 @@ Shifting — 8XY6, 8XYE opcodes: only operate on VX, instead of storing the shif
 Jumping — BNNN opcode: "jump to address NNN + V0" doesn't use V0, but VX.  
 
 
-
-Key bindings (using scancodes):  
+**Key bindings** (using scancodes):  
 
 
     +---------------------------------------------------+
