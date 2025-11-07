@@ -19,7 +19,9 @@ Download and unpack Chip-8-Release.zip, run "Rin's Chip-8 Emulator.exe"
 
 This emulator's instructions are of modern behaviour.  
 
-Quirks:    1. VF Reset: on 
+Quirks:    
+
+		   1. VF Reset: on 
 
            2. Memory: on  
 		   
