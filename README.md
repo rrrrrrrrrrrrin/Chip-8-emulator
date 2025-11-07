@@ -19,6 +19,7 @@ Download and unpack Chip-8-Release.zip, run "Rin's Chip-8 Emulator.exe"
 
 This emulator's instructions are of modern behaviour.  
 
+
 Quirks:    
 
 		   1. VF Reset: on 
@@ -50,6 +51,7 @@ Shifting — 8XY6, 8XYE opcodes: only operate on VX, instead of storing the shif
 Jumping — BNNN opcode: "jump to address NNN + V0" doesn't use V0, but VX.  
 
 
+
 Key bindings (using scancodes):  
 
 
@@ -61,6 +63,7 @@ Key bindings (using scancodes):
     |	7 8 9 E               A S D F                   |
     |	A 0 B F               Z X C V                   |
     +---------------------------------------------------+
+
 
 How to use: 
 
